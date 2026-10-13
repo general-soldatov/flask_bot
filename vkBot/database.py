@@ -74,7 +74,8 @@ class BaseTable(BaseModel):
     def create_table(cls):
         fields = [f'{field_name} {DATA.get(field_info.annotation, JSON).__name__}{" PRIMARY KEY" if field_name == cls.primary_key else ""}' 
                   for field_name, field_info in cls.model_fields.items()]
-        return f"""CREATE TABLE IF NOT EXISTS {cls.__name__.lower()} ({',\n'.join(fields)});"""
+        field = ',\n'.join(fields)
+        return f"CREATE TABLE IF NOT EXISTS {cls.__name__.lower()} ({field});"
 
     def insert(self):
         placeholders = ", ".join(["?"] * len(self.model_fields))
