@@ -1,0 +1,15 @@
+stepik:
+    client_id: "CXTCZ7dS9CX7VxKcGg31VRt5UwgrqD2CQnMqFF4P"
+    client_secret: "i4Dw578qHDSNkZglYl7ZgxUZrpim7DrJioh3FPUccSWFpnS5Qc1Qg5xbktWqwDlwcycbNuksuGcozOgzkD0EWGlXiwBK6LTooE4N10axhTOqYHWGTOMrBlN1DF9Z2NPk"
+course:
+    phys: 287410
+    termex: 278225
+colab:
+  - label: "«Кинематика: поймай мяч»"
+    link: https://drive.google.com/file/d/1Ydi92R5uyN8z8tn8apssaFLBpf9_mRHN/view?usp=sharing
+  - label: "«Векторы и силы: тянем-потянем»"
+    link: https://drive.google.com/file/d/1CG5GpusmswfPf5F6aEhkJIs1ebLLZcmT/view?usp=sharing
+  - label: "«Динамика: машина на светофоре»"
+    link: https://drive.google.com/file/d/1CG5GpusmswfPf5F6aEhkJIs1ebLLZcmT/view?usp=sharing
+  - label: "«Импульс и абсолютно неупругий удар»"
+    link: https://drive.google.com/file/d/1ywMovm9_H9g_RR9X_Z5z1AxEAd_a9Lvn/view?usp=sharing

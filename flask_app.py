@@ -1,8 +1,8 @@
-
 import os
 from flask import Flask, request, jsonify, render_template, Response
 from dotenv import load_dotenv
 from pathlib import Path
+from app.index import handler
 
 env_path = Path(__file__).parent / '.env'
 load_dotenv(dotenv_path=env_path)
@@ -19,7 +19,7 @@ def handle_post():
         # Обработка подтверждения
         if data.get('type') == 'confirmation':
             return Response(os.getenv("CONFIRMATION_CODE"), mimetype='text/plain')
-
+        handler(data)
         # return jsonify({"status": "success", "received_json_user": username}), 200
     return Response('ok', mimetype='text/plain')
 

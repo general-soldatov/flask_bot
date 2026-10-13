@@ -1,0 +1,47 @@
+library:
+  termex:
+    metodic:
+      static: https://drive.google.com/file/d/172EuTxLjZlYR0GYi03wdbzu70kae4RdC/view?usp=sharing
+      kinematic: https://drive.google.com/file/d/1i23gh8Kcsu-R5OkyHfdbp7SFUW2c73kx/view?usp=sharing
+      dynamic: https://drive.google.com/file/d/1wrluEFNR18gYT1wFe-oLsmar9pxSB8ZH/view?usp=sharing
+    books:
+      short: https://drive.google.com/file/d/17OhsVDAaPVkdBEMbjl3wR0Scj7WjeMYo/view?usp=drive_link
+  phys:
+    metiodic:
+      mechanic_mkt: "https://drive.google.com/file/d/10ToIHwEVfMOCmsB3Rx0MrTMO3HguWWcF/view?usp=sharing"
+      electrical: "https://drive.google.com/file/d/10IN4eIFwDeObEX-VOdgGNwriSuC1d9rj/view?usp=sharing"
+      optics: "https://drive.google.com/file/d/10PhhtqlFOLd8hOn8vFnjAt5ejQDGqcMG/view?usp=sharing"
+    books:
+      physics: "https://drive.google.com/file/d/1-vqc9NgTDGwn_ZLUX4hrDg4qnqAtoFsc/view?usp=sharing"
+      colab_book: "https://drive.google.com/file/d/1QBQy3WnNojNuQ97pDD_1F4NDQ3MV-5wL/view?usp=sharing"
+  code:
+    metodic:
+      code: ""
+    books:
+      code: ""
+courses:
+  termex: https://stepik.org/course/278225/info
+  phys: "https://stepik.org/course/278225/info"
+  code: "https://stepik.org/course/231296/info"
+schedule:
+  weekday: ['', "ПОНЕДЕЛЬНИК", "ВТОРНИК", "СРЕДА", "ЧЕТВЕРГ", "ПЯТНИЦА", "СУББОТА", "ВОСКРЕСЕНЬЕ"]
+  selector: ['today', 'tomorrow', 'after_tom', 'to_2_day']
+  source: https://storage.yandexcloud.net/termex-bot/json/schedule.json
+  profile: https://d5dvtf5ioi8q69ckjelk.apigw.yandexcloud.net/vk_bot/bot={tg_id}
+contacts:
+  vk: 'https://vk.com/general_soldatov'
+  tg: 'https://t.me/general_soldatov'
+  stepik: "https://stepik.org/users/758257555/teach"
+tasks:
+  termex: ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'A1', 'A2', 'A3', 'A4', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9']
+  phys: ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8', 'L9', 'L10', 'L11', 'L12', 'L13', 'L14', 'L15', 'L16', 'L17', 'L18', 'L19', 'L20', 'L21', 'L22', 'L23']
+  code: null
+  percent: [5, 10, 15, 20, 35, 40]
+admin:
+  dialog: https://vk.com/gim237718910/convo/{user_id}?cmid={cmid}&entrypoint=go_to_source_message&tab=all
+groups:
+  termex: {"НТТС": ['8a', '8b', '9a']}
+  phys: {'Гео': ['1-1']}
+classes:
+  termex: https://stepik.org/join-class/4bf6146a950c79b8719975964ad3b0ad91ee2af3
+  phys: https://stepik.org/join-class/bb1365b6d8deeee710b1e681fd9ef55713132d78
