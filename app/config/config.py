@@ -2,7 +2,7 @@ import os
 import yaml
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Union
-from boto_orm.models.config import AWSConfig, AWSSession
+# from boto_orm.models.config import AWSConfig, AWSSession
 
 
 VK_TOKEN = os.getenv('ACCESS_KEY')
@@ -46,26 +46,26 @@ class Lexicon(YamlProject):
     inline: Dict[str, str]
     contacts: Dict[str, str]
 
-session = AWSSession(
-    access_key = os.getenv('AWS_ACCESS_KEY_ID'), 
-    secret_key = os.getenv('AWS_SECRET_ACCESS_KEY'))
+# session = AWSSession(
+#     access_key = os.getenv('AWS_ACCESS_KEY_ID'), 
+#     secret_key = os.getenv('AWS_SECRET_ACCESS_KEY'))
 
-db_config = AWSConfig(
-    service_name = 'dynamodb', 
-    endpoint_url = os.getenv('ENDPOINT'), 
-    region_name = os.getenv('REGION_NAME'),
-    retries={'max_attempts': 3, 'mode': 'standard'})
+# db_config = AWSConfig(
+#     service_name = 'dynamodb', 
+#     endpoint_url = os.getenv('ENDPOINT'), 
+#     region_name = os.getenv('REGION_NAME'),
+#     retries={'max_attempts': 3, 'mode': 'standard'})
 
-termex_config = AWSConfig(
-    service_name = 'dynamodb', 
-    endpoint_url = os.getenv('TERMEX_ENDPOINT'), 
-    region_name = os.getenv('REGION_NAME'))
+# termex_config = AWSConfig(
+#     service_name = 'dynamodb', 
+#     endpoint_url = os.getenv('TERMEX_ENDPOINT'), 
+#     region_name = os.getenv('REGION_NAME'))
 
-s3_config = AWSConfig(
-    service_name = 's3',
-    endpoint_url = 'https://storage.yandexcloud.net',
-    region_name = os.getenv('REGION_NAME')
-)
+# s3_config = AWSConfig(
+#     service_name = 's3',
+#     endpoint_url = 'https://storage.yandexcloud.net',
+#     region_name = os.getenv('REGION_NAME')
+# )
 
 
 class Service(YamlProject):
