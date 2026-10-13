@@ -2,3 +2,4 @@
 .env
 test_res.py
 test_index.py
+session.yaml
