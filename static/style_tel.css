@@ -1,0 +1,93 @@
+body {
+  background-color: black;
+  color: white;
+  font-size: 17pt;
+  font-weight: bold;
+}
+
+h2 {
+  color: #9105F5;
+  font-weight: bold;
+  font-size: 19pt;
+  width: 270px;
+}
+
+.var-table {
+  color: white;
+  font-size: 22pt;
+
+}
+
+.info-table {
+   font-size: 15pt;
+}
+
+.info-table > th, td {
+   padding: 10px 15px;
+}
+
+.sed {
+    font-weight: bold;
+    color: #9105F5;
+}
+
+.rang img {
+  width:100pt;
+  height:115pt;
+  background-image:url(data:image/png;base64,iVBORwA<MoreBase64SringHere>);
+}
+
+.ranger {
+  padding: 10px;
+}
+
+.rang_name  {
+  color: #9105F5;
+}
+
+.rate {
+  color: white;
+  padding: 1pt 8pt;
+  margin: 15pt 15pt;
+
+}
+
+.animated-progress {
+  width: 270px;
+  height: 30px;
+  border-radius: 5px;
+  margin: 20px 10px;
+  border: 1px solid white;
+  overflow: hidden;
+  position: relative;
+}
+
+.animated-progress span {
+  height: 100%;
+  display: block;
+  width: 0;
+  color: rgb(255, 251, 251);
+  font-weight: bold;
+  line-height: 30px;
+  position: absolute;
+  text-align: end;
+  padding-right: 5px;
+}
+.progress-blue span {
+  background-color: indigo;
+}
+
+.star {
+    background-color: white;
+		clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+		display: inline-block;
+		height: 53px;
+		width: 53px;
+	}
+	#active {
+	  background-color: orange;
+	}
+
+.checked {
+  color: orange;
+}

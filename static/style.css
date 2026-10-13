@@ -1,0 +1,154 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0pt;
+  font-family: 'segoe ui';
+}
+
+.nav {
+  height: 50pt;
+  width: 100%;
+  background-color: #4d4d4d;
+  position: relative;
+}
+
+.nav > .nav-header {
+  display: inline;
+}
+
+.nav > .nav-header > .nav-title {
+  display: inline-block;
+  font-size: 22pt;
+  color: white;
+  padding: 10pt 10pt 10pt 10pt;
+}
+
+.nav > .nav-header > .nav-title img {
+    top: 10pt;
+    width: 22pt;
+    height: 22pt;
+}
+
+.nav > .nav-header > .nav-title > a {
+  color: white;
+  text-decoration: none;
+}
+
+.nav > .nav-btn {
+  display: none;
+}
+
+.nav > .nav-links {
+  display: inline;
+  float: right;
+  font-size: 18pt;
+}
+
+h2 {
+    padding: 10px 15px;
+}
+
+.nav > .nav-links > a {
+  display: inline-block;
+  padding: 13pt 10pt 13pt 10pt;
+  text-decoration: none;
+  color: #efefef;
+}
+
+.nav > .nav-links > a:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.nav > #nav-check {
+  display: none;
+}
+
+.var-table {
+    width: 50%;
+    font-size: 15pt;
+}
+
+.doom {
+    width: 500pt;
+    height: 250pt;
+    padding: 10px 15px;
+}
+
+.var-table > th, td {
+   padding: 10px 15px;
+}
+
+.sed {
+    font-weight: bold;
+
+}
+
+@media (max-width:850pt) {
+  .nav > .nav-btn {
+    display: inline-block;
+    position: absolute;
+    right: 0pt;
+    top: 0pt;
+  }
+  .nav > .nav-btn > label {
+    display: inline-block;
+    width: 90pt;
+    height: 100pt;
+    padding: 20pt;
+  }
+  .nav > .nav-btn > label:hover,.nav  #nav-check:checked ~ .nav-btn > label {
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+  .nav > .nav-btn > label > span {
+    display: block;
+    width: 55pt;
+    height: 25pt;
+    border-top: 10pt solid #eee;
+  }
+  .nav > .nav-links {
+    position: absolute;
+    display: block;
+    width: 100%;
+    background-color: #333;
+    height: 0pt;
+    transition: all 0.3s ease-in;
+    overflow-y: hidden;
+    top: 100pt;
+    left: 0pt;
+  }
+  .nav > .nav-links > a {
+    display: block;
+    width: 100%;
+    font-size: 40pt;
+  }
+  .nav > #nav-check:not(:checked) ~ .nav-links {
+    height: 0pt;
+  }
+  .nav > #nav-check:checked ~ .nav-links {
+    height: calc(100vh - 50pt);
+    overflow-y: auto;
+  }
+  .nav {
+  height: 100pt;
+  width: 100%;
+  background-color: #4d4d4d;
+  position: relative;
+  }
+  .nav > .nav-header > .nav-title {
+  display: inline-block;
+  font-size: 48pt;
+  color: white;
+  padding: 20pt 20pt 20pt 20pt;
+  }
+  .nav > .nav-header > .nav-title img {
+    top: 10pt;
+    width: 38pt;
+    height: 38pt;
+  }
+  .var-table {
+    width: 25%;
+    font-size: 25pt;
+  }
+}

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<link rel="stylesheet" href="/static/style_tel.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Мой профиль</title>
+</head>
+ <body>
+{% if name %}
+  <h2>{{fio}}</h2>
+  <table class="var-table">
+    <tr class="rang">
+      <td><img class="rang" src="{{rang[1]}}" </td>
+      <td class="ranger"><p class='rang_name'>Ваш ранг</p>
+        <p>{{rang[0]}}</p>
+      </td>
+    </tr>
+    </table>
+     <p>Балл рейтинга:</p>
+    <div class="animated-progress progress-blue">
+        <span data-progress="{{rate[0]}}"></span>
+      </div>
+
+   <p>Мой рейтинг:</p>
+<p>
+{% for row in range(star) %}
+     <div class="star" id="active"> </div>
+{% endfor %}
+{% for row in range(5-star) %}
+     <div class="star"> </div>
+{% endfor %}
+
+</p>
+
+  <p>Информация</p>
+<table class="info-table">
+    {% for key, value in infos.items() %}
+        <tr><td class="sed">{{ key }}</td><td>{{ value }}</td></tr>
+    {% endfor %}
+</table>
+{% else %}
+  <h1>{{variant}}</h1>
+{% endif %}
+
+<script>
+    $(".animated-progress span").each(function () {
+  $(this).animate(
+    {
+      width: $(this).attr("data-progress")*100/150 + "%",
+    },
+    1000
+  );
+  $(this).text($(this).attr("data-progress"));
+});
+</script>
+
+  </body>

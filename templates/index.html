@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<link rel="stylesheet" href="/static/style.css">
+<head>
+    <meta charset="UTF-8">
+    <title>Теоретическая механика</title>
+</head>
+<div class="nav">
+  <input type="checkbox" id="nav-check">
+  <div class="nav-header">
+    <div class="nav-title">
+      <a href="#" target="_blank">
+          <img src="/static/shev.png" />
+          Теоретическая механика</a>
+    </div>
+  </div>
+  <div class="nav-btn">
+    <label for="nav-check">
+      <span></span>
+      <span></span>
+      <span></span>
+    </label>
+  </div>
+
+  <div class="nav-links">
+    <a href="#" target="_blank">Статика</a>
+    <a href="#" target="_blank">Кинематика</a>
+    <a href="#" target="_blank">Динамика</a>
+    <a href="#" target="_blank">О проекте</a>
+    <a href="#" target="_blank">Контакты</a>
+  </div>
+</div>
+
+{% if name %}
+    <h2>{{infos['ФИО']}}</h2>
+    <table class="var-table">
+        {% for key, value in infos.items() %}
+            <tr><td class="sed">{{ key }}</td><td>{{ value }}</td></tr>
+        {% endfor %}
+    </table>
+{% else %}
+  <h1>{{variant}}</h1>
+{% endif %}
+
+<p><progress id="progressbar" value="120" max="100"></progress></p>
+
+<p><img class="doom" src="/static/картинка.jpg" /></p>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+
