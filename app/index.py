@@ -19,7 +19,7 @@ from app.database import Users, ManageVK, SQLiteStorage, Students
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-TOKEN = os.getenv('VK_BOT')
+TOKEN = os.getenv('ACCESS_KEY')
 ADMIN = os.getenv('ADMIN')
 
 bot = Bot(TOKEN)
