@@ -1,6 +1,6 @@
 
 import os
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, Response
 
 app = Flask(__name__)
 
@@ -12,11 +12,8 @@ def handle_post():
     
     # Обработка подтверждения
         if data.get('type') == 'confirmation':
-            return jsonify({
-                'statusCode': 200,
-                'body': os.getenv("CONFIRMATION_CODE"),
-                'headers': {'Content-Type': 'text/plain'}
-            }), 200
+            return Response(os.getenv("CONFIRMATION_CODE"), mimetype='text/plain')
+
         # return jsonify({"status": "success", "received_json_user": username}), 200
 
 
