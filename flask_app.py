@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "/home/GeneralSoldatov/mysite/")))
 
-
+import threading
 from flask import Flask, request, jsonify, render_template, Response
 from dotenv import load_dotenv
 from pathlib import Path
@@ -23,7 +23,8 @@ def handle_post():
         # Обработка подтверждения
         if data.get('type') == 'confirmation':
             return Response(os.getenv("CONFIRMATION_CODE"), mimetype='text/plain')
-        handler(data, {})
+        
+        threading.Thread(target=handler, args=(data, {})).start()
         # return jsonify({"status": "success", "received_json_user": username}), 200
     return Response('ok', mimetype='text/plain')
 
