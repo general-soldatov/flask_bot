@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "/home/GeneralSoldatov/mysite/")))
 
-import threading
+
 from flask import Flask, request, jsonify, render_template, Response
 from dotenv import load_dotenv
 from pathlib import Path
@@ -12,6 +12,9 @@ env_path = Path(__file__).parent / '.env'
 load_dotenv(dotenv_path=env_path)
 
 app = Flask(__name__)
+
+PROCESSED_EVENTS = []
+MAX_CACHE_SIZE = 100
 
 @app.route('/vk-bot/webhook', methods=['POST'])
 def handle_post():
@@ -23,8 +26,18 @@ def handle_post():
         # Обработка подтверждения
         if data.get('type') == 'confirmation':
             return Response(os.getenv("CONFIRMATION_CODE"), mimetype='text/plain')
-        
-        threading.Thread(target=handler, args=(data, {})).start()
+        event_id = data.get('event_id')
+        if event_id:
+            if event_id in PROCESSED_EVENTS:
+                # Если этот ID мы уже видели секунду назад — это дубликат от ВК!
+                # Мгновенно возвращаем 'ok', игнорируя повторное выполнение кода
+                return Response('ok', mimetype='text/plain')
+            
+            # Если ID новый, запоминаем его
+            PROCESSED_EVENTS.append(event_id)
+            if len(PROCESSED_EVENTS) > MAX_CACHE_SIZE:
+                PROCESSED_EVENTS.pop(0) 
+        handler(data, {})
         # return jsonify({"status": "success", "received_json_user": username}), 200
     return Response('ok', mimetype='text/plain')
 
