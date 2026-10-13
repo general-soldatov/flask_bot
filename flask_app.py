@@ -23,7 +23,7 @@ def handle_post():
         # Обработка подтверждения
         if data.get('type') == 'confirmation':
             return Response(os.getenv("CONFIRMATION_CODE"), mimetype='text/plain')
-        handler(data, '')
+        handler(data, {})
         # return jsonify({"status": "success", "received_json_user": username}), 200
     return Response('ok', mimetype='text/plain')
 
