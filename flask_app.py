@@ -1,21 +1,25 @@
 
 import os
 from flask import Flask, request, jsonify, render_template, Response
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
 @app.route('/vk-bot/webhook', methods=['POST'])
 def handle_post():
     # 1. Если данные отправлены как JSON (часто используется для Telegram-ботов)
-    if request.is_json:
-        data = request.get_json()
+    data = request.get_json(silent=True)
+    # if request.is_json:
+    #     data = request.get_json()
     
     # Обработка подтверждения
-        if data.get('type') == 'confirmation':
-            return Response(os.getenv("CONFIRMATION_CODE"), mimetype='text/plain')
+    if data.get('type') == 'confirmation':
+        return Response(os.getenv("CONFIRMATION_CODE"), mimetype='text/plain')
 
         # return jsonify({"status": "success", "received_json_user": username}), 200
-
+    return Response('ok', mimetype='text/plain')
 
 
 @app.route('/')
