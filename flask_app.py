@@ -1,4 +1,8 @@
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "/home/GeneralSoldatov/mysite/")))
+
+
 from flask import Flask, request, jsonify, render_template, Response
 from dotenv import load_dotenv
 from pathlib import Path
