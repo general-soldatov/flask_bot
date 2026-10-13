@@ -104,4 +104,4 @@ def handler(event: Dict[str, Any], context):
     # db = ManageVK()
     # db.create_tables(BaseTable)
     # dp.handler(event, context, context_data={'db': db}, storage=YQLStorage(db))
-    dp.handler(event, context)
+    dp.run_sinc(event, context)
