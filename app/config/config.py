@@ -73,4 +73,4 @@ class Service(YamlProject):
     course: Dict[str, int]
     colab: List[Dict[str, str]]
 
-service = Service.model_validate_yaml('app/config/session.yaml')
+service = Service.model_validate_yaml('/home/GeneralSoldatov/mysite/app/config/session.yaml')

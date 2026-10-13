@@ -1,8 +1,8 @@
 from .config import Reference, Lexicon
 from typing import Dict, Literal, List
 
-LEXICON = "app/config/lexicon.yaml"
-REFERENCE = "app/config/reference.yaml"
+LEXICON = "/home/GeneralSoldatov/mysite/app/config/lexicon.yaml"
+REFERENCE = "/home/GeneralSoldatov/mysite/app/config/reference.yaml"
 
 reference = Reference.model_validate_yaml(REFERENCE)
 lexicon = Lexicon.model_validate_yaml(LEXICON)
