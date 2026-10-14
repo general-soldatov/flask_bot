@@ -98,7 +98,7 @@ def question_check(event: MessageEventObject, state: FSMContext, db: ManageVK, b
             info = db.get_user_by_id(event.user_id)
             student = Students(id=event.user_id, subject=info.subject, 
                                group_id=data['group'], full_name=data['name'], profile=data['profile'])
-            db.add(student)
+            db.insert(student)
             bot.send_message(peer_id=ADMIN, message=lexicon.users['success_to_admin'].format(**data,
                                                                                          user_id=event.user_id,
                                                                                          subject=lexicon.subject[info.subject]))
@@ -162,65 +162,3 @@ def edit_schedule(event: MessageEventObject, state: FSMContext, bot: Bot):
     if info:
         state.clear()
     event.edit_message(lexicon.users['help'].format(name=users_info.first_name), keyboard=key.contact.as_markup())
-
-
-# @rt.raw_event(GroupEventType.MESSAGE_EVENT, MessageEvent, SourcePayload('profile'))
-# async def edit_schedule(event: MessageEvent):
-#     data = event.object.payload.get('key')
-#     if data == 'subject':
-#         await event.edit_message(lexicon.users['choice_subject'], keyboard=key.get_subject(True))
-#     elif data == 'register':
-#         await bot.state_dispenser.set(event.peer_id, Register.NAME)
-#         bot.state_dispenser.dictionary['message_id'] = event.conversation_message_id
-#         await event.edit_message(lexicon.users['register'], keyboard=key.stop)
-#     else:
-#         info = db.get_info(event.user_id)
-#         url = None
-#         if info['students']:
-#             url = reference.schedule.profile.format(subject=info['students']['subject'], tg_id=info['students']['tg_id'])
-#         data = dict(name = f"{info['first_name']} {info['last_name']}",
-#                     subject=lexicon.subject[info['subject']])
-#         await event.edit_message(lexicon.users['profile'].format(**data), keyboard=key.get_profile(url))
-
-# @rt.message(state=Register.NAME)
-# async def question(message: Message):
-#     id = bot.state_dispenser.dictionary['message_id']
-#     bot.state_dispenser.dictionary['message_id'] = message.id
-#     await bot.api.messages.delete(peer_id=message.peer_id, cmids=[id], delete_for_all=True)
-#     user = await message.get_user()
-#     info_db = db.get_user_by_id(user.id)
-#     data = Contingent.get(message.text, info_db.subject)
-#     if data:
-#         info = data.model_dump()
-#         bot.state_dispenser.dictionary['data'] = info
-#         await message.answer(
-#             lexicon.users['correct'].format(**info),
-#             keyboard=key.get_agree('register'))
-#     else:
-#         await message.answer(lexicon.users['uncorrect'], keyboard=key.stop)
-
-# @rt.raw_event(GroupEventType.MESSAGE_EVENT, MessageEvent, SourcePayload('register'))
-# async def question_check(event: MessageEvent):
-#     agree = event.object.payload.get('key')
-#     data = bot.state_dispenser.dictionary['data']
-#     await bot.state_dispenser.delete(event.peer_id)
-#     if agree == 'yes':
-#         try:
-#             info = db.get_user_by_id(event.user_id)
-#             db.add_students(user_id=event.user_id, **data, subject=info.subject)
-#             await bot.api.messages.send(user_id=ADMIN,
-#                                         random_id=0, peer_id=event.peer_id,
-#                                         message=lexicon.users['success_to_admin'].format(**data,
-#                                                                                          user_id=event.user_id,
-#                                                                                          subject=lexicon.subject[info.subject]))
-#             await event.edit_message(lexicon.users['success'].format(**data,
-#                                                                      subject=lexicon.subject[info.subject]),
-#                                                                      keyboard=key.start_pack(info.subject, is_register=True))
-#         except Exception as e:
-#             await bot.api.messages.send(user_id=ADMIN,
-#                                         random_id=0, peer_id=event.peer_id,
-#                                         message=lexicon.admin['error_reg'].format(**data, user_id=event.user_id, e=e))
-#             await event.edit_message(lexicon.users['error'])
-
-#     else:
-#         await event.edit_message(lexicon.users['exit_reg'])
