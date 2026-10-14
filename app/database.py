@@ -151,12 +151,8 @@ class MySQLStorage(BaseStorage):
         """Полностью перезаписать данные"""
         row_id = self._key_to_id(key)
         user: FSMMemory = self.db.select_id(FSMMemory, row_id)
-        if user:
-            user.data = data
-            self.db.update(user)
-        else:
-            user = FSMMemory(id=row_id, data=data)
-            self.db.insert(user)
+        user.data = data
+        self.db.update(user)
 
 
     def get_data(self, key):
