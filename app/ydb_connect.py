@@ -4,7 +4,7 @@ import os
 import logging
 from dotenv import load_dotenv
 import hashlib
-from typing import Any, Union, ClassVar, Optional, Dict, List
+from typing import Any, Union, ClassVar, Optional, List
 from pydantic import computed_field, BaseModel
 from vkBot.fsm.storage.base import BaseStorage
 import json
@@ -85,9 +85,8 @@ class BaseTable(BaseModel):
                   for field_name, field_info in cls.model_fields.items()]
         fields.extend([f'{field_name} {DATA.get(field_info.return_type, JsonDocument).__name__}' 
                   for field_name, field_info in cls.model_computed_fields.items()])
-        text = f"""
-CREATE TABLE IF NOT EXISTS `{cls.__name__.lower()}` (
-{',\n'.join(fields)}"""
+        field_str = ',\n'.join(fields)
+        text = f"CREATE TABLE IF NOT EXISTS `{cls.__name__.lower()}` ({field_str}"
         if cls.primary_key:
             text += f",\nPRIMARY KEY ({cls.primary_key})" 
         text += "\n);"
