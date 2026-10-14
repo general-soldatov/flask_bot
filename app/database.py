@@ -194,7 +194,7 @@ class MySQLStorage(BaseStorage):
 class ManageVK(DB):
     def set_subject_user(self, user_id: int, subject: str):
         try:
-            query = f"UPDATE {Users.__name__.lower()} SET subject = %s WHERE id = $s"
+            query = f"UPDATE {Users.__name__.lower()} SET subject = %s WHERE id = %s"
             connection = self.get_db_connection()
             with connection.cursor() as cursor:
                 cursor.execute(query, (subject, user_id))
@@ -230,7 +230,7 @@ class ManageVK(DB):
 
     def set_percent(self, user_id: int, percent: int):
         try:
-            query = f"UPDATE {Students.__name__.lower()} SET prize = %s WHERE id = $s"
+            query = f"UPDATE {Students.__name__.lower()} SET prize = %s WHERE id = %s"
             connection = self.get_db_connection()
             with connection.cursor() as cursor:
                 cursor.execute(query, (percent, user_id))
@@ -325,7 +325,7 @@ class ManageVK(DB):
 
     def update_stepik_id(self, user_id: int, stepik_id: int):
         try:
-            query = f"UPDATE {Stepik.__name__} SET stepik_id = %s WHERE id = $s"
+            query = f"UPDATE {Stepik.__name__} SET stepik_id = %s WHERE id = %s"
             connection = self.get_db_connection()
             with connection.cursor() as cursor:
                 cursor.execute(query, (stepik_id, user_id))
