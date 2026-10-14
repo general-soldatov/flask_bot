@@ -92,8 +92,9 @@ def update_data_stepik(db: ManageVK):
             student: Students = db.get_info(elem.id)
             for user in grades[elem.course_id]:
                 if user['user_id'] == elem.stepik_id:
-                    text += f'{student.full_name} | {user['score']}\n'
-                    db.update_score_stepik(student.id, user['score'])
+                    score = user['score']
+                    text += f'{student.full_name} | {score}\n'
+                    db.update_score_stepik(student.id, score)
                     flag = True
                     break
             if not flag:
