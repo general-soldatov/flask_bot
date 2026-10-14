@@ -1,13 +1,9 @@
-import sqlite3
+import os
 import json
-from typing import Any, ClassVar, Union, Optional, Dict
+from typing import Any, ClassVar, Union
 from pydantic import BaseModel
 import logging
-from pathlib import Path
-# import botocore.session
-# from botocore.exceptions import ClientError
-# from boto_orm.models.config import AWSConfig, AWSSession
-
+import pymysql
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +19,15 @@ class TypeSQL:
         self.value = value
         self.type = self.__class__.__name__
 
-class INTEGER(TypeSQL):
+class INT(TypeSQL):
     def __init__(self, value: int):
+        super().__init__(value)
+
+    def __str__(self):
+        return str(self.value)
+
+class FLOAT(TypeSQL):
+    def __init__(self, value: float):
         super().__init__(value)
 
     def __str__(self):
@@ -39,7 +42,7 @@ class TEXT(TypeSQL):
             return self.value
         raise ValueError('Неправильный тип данных')
 
-class BOOLEAN(TypeSQL):
+class BOOL(TypeSQL):
     def __init__(self, value: bool):
         super().__init__(value) 
 
@@ -60,8 +63,9 @@ class JSON(TypeSQL):
         raise ValueError('Неправильный тип данных')
 
 DATA = {
-    int: INTEGER,
-    bool: BOOLEAN,
+    int: INT,
+    float: FLOAT,
+    bool: BOOL,
     str: TEXT,
     dict: JSON
 }     
@@ -75,133 +79,144 @@ class BaseTable(BaseModel):
         fields = [f'{field_name} {DATA.get(field_info.annotation, JSON).__name__}{" PRIMARY KEY" if field_name == cls.primary_key else ""}' 
                   for field_name, field_info in cls.model_fields.items()]
         field = ',\n'.join(fields)
-        return f"CREATE TABLE IF NOT EXISTS {cls.__name__.lower()} ({field});"
+        return f"CREATE TABLE IF NOT EXISTS {cls.__name__.lower()} ({field}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
 
     def insert(self):
-        placeholders = ", ".join(["?"] * len(self.model_fields))
-        return f"INSERT INTO {self.__class__.__name__.lower()} VALUES ({placeholders})"
+        placeholders = ", ".join(["%s"] * len(self.__class__.model_fields))
+        params = tuple(self.model_dump().values())
+        return f"INSERT INTO {self.__class__.__name__.lower()} VALUES ({placeholders})", params
 
-    def select(self):
-        return f"SELECT * FROM {self.__class__.__name__.lower()}"
-
-    def values(self):
-        return tuple(str(DATA[field_info.annotation](self.model_dump().get(field_name, dict))) for field_name, field_info in self.model_fields.items())
+    def update(self):
+        placeholders = ", ".join(["%s"] * len(self.__class__.model_fields))
+        params = tuple(self.model_dump().values())
+        return f"UPDATE INTO {self.__class__.__name__.lower()} VALUES ({placeholders})", params
 
     @classmethod
-    def model_construct(cls, *values):
+    def select(cls):
+        return f"SELECT * FROM {cls.__name__.lower()};"
+
+    @classmethod
+    def drop(cls):
+        return f"DROP TABLE IF EXISTS {cls.__name__.lower()};"
+
+    @classmethod
+    def select_id(cls, key):
+        return f"SELECT * FROM `{cls.__name__.lower()}` WHERE {cls.primary_key} = %s;", (key, )
+
+    @classmethod
+    def delete_id(cls, key):
+        return f"DELETE FROM `{cls.__name__.lower()}` WHERE {cls.primary_key} = %s;", (key, )
+
+
+    @classmethod
+    def model_construct(cls, obj: dict):
         return cls(**{
             field: json.loads(value) if cls.model_fields[field].annotation == dict else value 
-                for field, value in zip(cls.model_fields, values)
+                for field, value in obj.items()
         })
 
 class DB:
-    def __init__(self, path):
-        self._conn = sqlite3.connect(path)
-        # Подключаемся и работаем с SQLite локально
-        self.cursor = self._conn.cursor()
+    def __init__(self):
+        self.user = os.getenv('DB_USER')
+        self.password = os.getenv('DB_PASSWORD')
+        self.host = os.getenv('DB_HOST')
+        self.name = os.getenv('DB_NAME')
+
+    def get_db_connection(self):
+        """Функция создает и возвращает чистое подключение к MySQL"""
+        return pymysql.connect(
+            host=self.host,
+            user=self.user,
+            password=self.password,
+            database=self.name,
+            charset='utf8mb4',
+            # Возвращает строки в виде удобных словарей {'id': 1, 'name': 'test'} вместо кортежей
+            cursorclass=pymysql.cursors.DictCursor 
+        )
 
     def create_tables(self, clses=BaseTable):
+        connection = self.get_db_connection()
         for cls in clses.__subclasses__():
             try:
-                query = cls.create_table()
-                self.cursor.execute(query)
+                with connection.cursor() as cursor:
+                    # Тестовый запрос проверки связи
+                    query = cls.create_table()
+                    cursor.execute(query)
+                
             except Exception as e:
                 logger.error(e)
                 continue        
-        self._conn.commit()
+        connection.commit()
+        connection.close()
 
     def drop_table(self, TableCls: type):
         if not isinstance(TableCls, type):
             raise TypeError("Требуется передать класс, а не экземпляр")
-        query = f"DROP TABLE IF EXISTS {TableCls.__name__.lower()}"
-        self.query_add(query, ())
+        connection = self.get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(TableCls.drop())
+            connection.commit()
         logger.info(f"Таблица {TableCls.__name__.lower()} удалена.")
 
-    def add(self, table: BaseTable):
-        query = table.insert()
-        self.query_add(query, table.values())
+    def insert(self, table: BaseTable):
+        query, params = table.insert()
+        connection = self.get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            connection.commit()
 
-    def get(self, TableCls: type):
+    def update(self, table: BaseTable):
+        query, params = table.update()
+        connection = self.get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            connection.commit()
+
+    def select(self, TableCls: type):
+        if not isinstance(TableCls, type):
+            raise TypeError("Требуется передать класс, а не экземпляр")
+        connection = self.get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(TableCls.select())
+            return [TableCls.model_construct(row) for row in cursor.fetchall()]
+
+    def select_id(self, TableCls: type, key: Any):
         if not isinstance(TableCls, type):
             raise TypeError("Требуется передать класс, а не экземпляр")
         try:
-            self.cursor.execute(f"SELECT * FROM {TableCls.__name__.lower()}")
-            rows = self.cursor.fetchall()
-            logger.info(f"Текущее количество записей в базе: {len(rows)}")
-            return [TableCls.model_construct(*row) for row in rows]
+            query, params = TableCls.select_id(key)
+            connection = self.get_db_connection()
+            with connection.cursor() as cursor:
+                cursor.execute(query, params)
+                return TableCls.model_validate(cursor.fetchone())
         except Exception as e:
             logger.error(e)
 
-    def query_add(self, text_query: str, data_query: tuple):
+    def delete_id(self, TableCls: type, key: Any):
+        if not isinstance(TableCls, type):
+            raise TypeError("Требуется передать класс, а не экземпляр")
+        query, params = TableCls.delete_id(key)
+        connection = self.get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            connection.commit()
+
+    def drop_table(self, TableCls: type):
+        if not isinstance(TableCls, type):
+            raise TypeError("Требуется передать класс, а не экземпляр")
+        connection = self.get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(TableCls.drop())
+            connection.commit()
+        logger.info(f"Таблица {TableCls.__name__.lower()} удалена.")
+
+    def query(self, text_query: str, data_query: tuple):
         try:
-            self.cursor.execute(text_query, data_query)
-            self._conn.commit()
-            return True
+            connection = self.get_db_connection()
+            with connection.cursor() as cursor:
+                cursor.execute(text_query, data_query)
+                return cursor.fetchall()
         except Exception as e:
             logger.error(e)
 
-    def query_get(self, text_query: str, params: Optional[tuple] = ()):
-        try:
-            self.cursor.execute(text_query, params)
-            return self.cursor.fetchall()
-        except Exception as e:
-            logger.error(e)
-        
-        
-# class SQLBucket:
-#     def __init__(self, local_path: Path, bucket_name: str, 
-#                  s3_path: str, session: AWSSession, 
-#                  config: AWSConfig, Table):
-#         self.local_path = local_path
-#         self.s3_path = s3_path
-#         self.bucket_name = bucket_name
-#         _session = botocore.session.get_session()
-#         _session.set_credentials(**session.model_dump())
-#         self.s3 = _session.create_client(**config.model_dump())
-#         # self.s3 = S3Manager(bucket_name, config, session)
-#         self.Table = Table
-
-#     def download_db(self):
-#         """Скачивает файл БД из бакета, если он там существует."""
-#         logger.info("Проверка наличия БД в бакете...")
-#         try:
-#             self.local_path.parent.mkdir(parents=True, exist_ok=True)
-#             # 2. Запрашиваем объект
-#             response = self.s3.get_object(Bucket=self.bucket_name, Key=self.s3_path)
-            
-#             # 3. Безопасно сохраняем в файл чанками (блоки по 1 МБ)
-#             with open(self.local_path, 'wb') as file:
-#                 for chunk in response['Body'].iter_chunks(chunk_size=1024 * 1024):
-#                     file.write(chunk)
-#             logger.info(f"БД успешно скачана во временный файл: {self.local_path}")
-#         except ClientError as e:
-#             if e.response['Error']['Code'] in ['404', 'NoSuchKey']:
-#                 logger.warning('Файл БД не найден в бакете. Будет создана новая локальная БД.')
-        
-#             else:
-#                 raise e
-
-#     def upload_db(self):
-#         """Выгружает обновленный файл БД обратно в бакет."""
-#         if self.local_path.exists():
-#             logger.info("Выгрузка измененной БД обратно в бакет...")
-#             # 2. Открываем файл в режиме бинарного чтения ('rb') 
-#             # и отправляем через метод put_object
-#             with open(self.local_path, 'rb') as file_data:
-#                 response = self.s3.put_object(
-#                     Bucket=self.bucket_name,
-#                     Key=self.s3_path,
-#                     Body=file_data  # Передаем файловый поток напрямую
-#                 )
-#             print(f"✅ Файл успешно загружен в S3: {self.bucket_name}/{self.s3_path}")
-#             print(f"ETag объекта: {response['ETag']}")
-
-#     def __enter__(self) -> DB:
-#         self.download_db()
-#         logger.info("Подключение к SQLite...")
-#         self.db = self.Table(self.local_path)
-#         return self.db
-
-#     def __exit__(self, exc_type, exc, tb):
-#         self.db._conn.close()
-#         self.upload_db()
+  

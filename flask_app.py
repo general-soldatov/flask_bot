@@ -3,13 +3,13 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "/home/GeneralSoldatov/mysite/")))
 
 
-from flask import Flask, request, jsonify, render_template, Response
+from flask import Flask, request, render_template, Response
 from dotenv import load_dotenv
 from pathlib import Path
-from app.index import handler
-
 env_path = Path(__file__).parent / '.env'
 load_dotenv(dotenv_path=env_path)
+
+from app.index import handler
 
 app = Flask(__name__)
 

@@ -9,10 +9,7 @@ from app.config.dictionary import lexicon
 from app.filters import SourcePayload, Helping, GetKey, Button
 import app.keyboards as key
 from app.features.schedule import Schedule
-# from vkBot.database import SQLBucket, BaseTable
-# from app.config.config import session, s3_config
-from pathlib import Path
-from app.database import Users, ManageVK, SQLiteStorage, Students
+from app.database import Users, ManageVK, Students, MySQLStorage
 # from app.ydb_connect import Users, ManageVK, YQLStorage, Students, BaseTable
 # from app.handlers import greeting_user, students, admin
 
@@ -32,14 +29,14 @@ rt = Router('analys')
 def start(message: Message, db: ManageVK):
     user = message.get_user()
     if user:
-        # if not db.get_user_by_id(user.id): 
-        #     data = Users(id=message.from_id, first_name=user.first_name, last_name=user.last_name, subject='')
-        #     db.insert(data)
+        if not db.get_user_by_id(user.id): 
+            data = Users(id=message.from_id, first_name=user.first_name, last_name=user.last_name, subject='')
+            db.insert(data)
         message.answer(lexicon.users['start'].format(name=user.first_name), keyboard=key.get_subject().as_markup())
     else:
-        # if not db.get_user_by_id(user.id): 
-        #     data = Users(id=message.from_id, first_name='user.first_name', last_name='user.last_name', subject='')
-        #     db.insert(data)
+        if not db.get_user_by_id(user.id): 
+            data = Users(id=message.from_id, first_name='user.first_name', last_name='user.last_name', subject='')
+            db.insert(data)
         message.answer(lexicon.users['start'].format(name='студент!'), keyboard=key.get_subject().as_markup())
 
 @dp.message(Helping())
@@ -101,7 +98,7 @@ def handler(event: Dict[str, Any], context):
 
     # with SQLBucket(Path("/tmp/vk-users.db"), 'phys-bot', 
     #             "databases/vk-users.db", session, s3_config, ManageVK) as db:
-    # db = ManageVK()
+    db = ManageVK()
     # db.create_tables(BaseTable)
     # dp.handler(event, context, context_data={'db': db}, storage=YQLStorage(db))
-    dp.run_sinc(event, context, context_data={'db': 'db'})
+    dp.run_sinc(event, context, context_data={'db': db}, storage=MySQLStorage(db))
