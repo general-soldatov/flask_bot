@@ -3,7 +3,6 @@ from vkBot.database import BaseTable, DB
 from vkBot.fsm.storage.base import BaseStorage
 from pydantic import computed_field
 import logging
-import json
 import hashlib
 
 logger = logging.getLogger(__name__)

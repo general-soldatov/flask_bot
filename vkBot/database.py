@@ -1,6 +1,6 @@
 import os
 import json
-from typing import Any, ClassVar, Union
+from typing import Any, ClassVar, Union, Optional
 from pydantic import BaseModel
 import logging
 import pymysql
@@ -14,244 +14,232 @@ class set_key:
     def __get__(self, instance, owner):
         return self.func(owner)
 
-class TypeSQL:
-    def __init__(self, value: Any):
-        self.value = value
-        self.type = self.__class__.__name__
-
-class INT(TypeSQL):
-    def __init__(self, value: int):
-        super().__init__(value)
-
-    def __str__(self):
-        return str(self.value)
-
-class FLOAT(TypeSQL):
-    def __init__(self, value: float):
-        super().__init__(value)
-
-    def __str__(self):
-        return str(self.value)
-
-class TEXT(TypeSQL):
-    def __init__(self, value: str):
-        super().__init__(value)
-
-    def __str__(self):
-        if isinstance(self.value, str):
-            return self.value
-        raise ValueError('Неправильный тип данных')
-
-class BOOL(TypeSQL):
-    def __init__(self, value: bool):
-        super().__init__(value) 
-
-    def __str__(self):
-        if isinstance(self.value, bool):
-            return str(self.value).upper()
-        raise ValueError('Неправильный тип данных')
-
-class JSON(TypeSQL):
-    def __init__(self, value: Union[dict, BaseModel]):
-        super().__init__(value) 
-    
-    def __str__(self):
-        if isinstance(self.value, dict):
-            return json.dumps(self.value)
-        if isinstance(self.value, BaseModel):
-            return self.value.model_dump_json()
-        raise ValueError('Неправильный тип данных')
-
-DATA = {
-    int: INT,
-    float: FLOAT,
-    bool: BOOL,
-    str: TEXT,
-    dict: JSON
-}     
-
-
 class BaseTable(BaseModel):
     primary_key: ClassVar[str] = set_key(lambda cls: "id") 
 
     @classmethod
     def create_table(cls):
-        fields = [f'{field_name} {DATA.get(field_info.annotation, JSON).__name__}{" PRIMARY KEY" if field_name == cls.primary_key else ""}' 
-                  for field_name, field_info in cls.model_fields.items()]
+        # Исправлено: Для первичного ключа используем INT, для обычных строк VARCHAR(255)
+        fields = []
+        for field_name, field_info in cls.model_fields.items():
+            if field_name == cls.primary_key:
+                sql_type = "INT NOT NULL AUTO_INCREMENT PRIMARY KEY" if field_info.annotation is int else "VARCHAR(255) PRIMARY KEY"
+            else:
+                annotation = field_info.annotation
+                if annotation is int: sql_type = "BIGINT"
+                elif annotation is float: sql_type = "DOUBLE"
+                elif annotation is bool: sql_type = "BOOLEAN"
+                elif annotation is str: sql_type = "VARCHAR(255)"
+                else: sql_type = "JSON" # Для dict, list и вложенных BaseModel
+            
+            fields.append(f"`{field_name}` {sql_type}")
+            
         field = ',\n'.join(fields)
-        return f"CREATE TABLE IF NOT EXISTS {cls.__name__.lower()} ({field}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+        return f"CREATE TABLE IF NOT EXISTS `{cls.__name__.lower()}` ({field}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+
+    def _prepare_params(self):
+        """Вспомогательный метод для очистки параметров."""
+        raw_data = self.model_dump()
+        clean_params = {}
+        for key, val in raw_data.items():
+            if isinstance(val, (dict, list)):
+                clean_params[key] = json.dumps(val, ensure_ascii=False)
+            elif isinstance(val, bool):
+                clean_params[key] = int(val) # Переводим в 1/0 для MySQL BOOLEAN
+            else:
+                clean_params[key] = val
+        return clean_params
 
     def insert(self):
+        """Исправлено: Корректный синтаксис INSERT INTO ... VALUES."""
         table_name = self.__class__.__name__.lower()
-            
-        # 2. Получаем все поля и конвертируем словари/списки в JSON-строки
-        raw_data = self.model_dump()
-        clean_params = []
-        for val in raw_data.values():
-            if isinstance(val, (dict, list)):
-                # Превращаем словари Python в строки JSON, чтобы MySQL их принял
-                clean_params.append(json.dumps(val, ensure_ascii=False))
-            else:
-                clean_params.append(val)
-                
-        fields = list(raw_data.keys())
-        set_clause = ", ".join([f"{field} = %s" for field in fields])
+        clean_data = self._prepare_params()
         
-        query = f"INSERT INTO {table_name} SET {set_clause} WHERE id = %s"
-        params = tuple(clean_params) + (raw_data.get('id'),)
+        fields = [f"`{k}`" for k in clean_data.keys()]
+        placeholders = ", ".join(["%s"] * len(clean_data))
         
-        return query, params
-        # placeholders = ", ".join(["%s"] * len(self.__class__.model_fields))
-        # params = tuple(self.model_dump().values())
-        # return f"INSERT INTO {self.__class__.__name__.lower()} VALUES ({placeholders})", params
+        query = f"INSERT INTO `{table_name}` ({', '.join(fields)}) VALUES ({placeholders});"
+        return query, tuple(clean_data.values())
+
+    def replace(self):
+        """Новый метод: Идеально для FSM. Создает запись или перезаписывает её, если ID существует."""
+        table_name = self.__class__.__name__.lower()
+        clean_data = self._prepare_params()
+        
+        fields = [f"`{k}`" for k in clean_data.keys()]
+        placeholders = ", ".join(["%s"] * len(clean_data))
+        
+        query = f"REPLACE INTO `{table_name}` ({', '.join(fields)}) VALUES ({placeholders});"
+        return query, tuple(clean_data.values())
 
     def update(self):
+        """Исправлено: Корректный синтаксис UPDATE ... SET ... WHERE id = %s."""
         table_name = self.__class__.__name__.lower()
-    
-        # 2. Получаем все поля и конвертируем словари/списки в JSON-строки
-        raw_data = self.model_dump()
-        clean_params = []
-        for val in raw_data.values():
-            if isinstance(val, (dict, list)):
-                # Превращаем словари Python в строки JSON, чтобы MySQL их принял
-                clean_params.append(json.dumps(val, ensure_ascii=False))
-            else:
-                clean_params.append(val)
-                
-        fields = list(raw_data.keys())
-        set_clause = ", ".join([f"{field} = %s" for field in fields])
+        clean_data = self._prepare_params()
+        pk_field = self.primary_key
         
-        query = f"UPDATE {table_name} SET {set_clause} WHERE id = %s"
-        params = tuple(clean_params) + (raw_data.get('id'),)
+        # ID убираем из SET, так как он будет использоваться только в WHERE
+        pk_value = clean_data.pop(pk_field, None)
+        
+        fields = list(clean_data.keys())
+        set_clause = ", ".join([f"`{field}` = %s" for field in fields])
+        
+        query = f"UPDATE `{table_name}` SET {set_clause} WHERE `{pk_field}` = %s;"
+        params = tuple(clean_data.values()) + (pk_value,)
         
         return query, params
 
     @classmethod
     def select(cls):
-        return f"SELECT * FROM {cls.__name__.lower()};"
+        return f"SELECT * FROM `{cls.__name__.lower()}`;"
 
     @classmethod
     def drop(cls):
-        return f"DROP TABLE IF EXISTS {cls.__name__.lower()};"
+        return f"DROP TABLE IF EXISTS `{cls.__name__.lower()}`;"
 
     @classmethod
     def select_id(cls, key):
-        return f"SELECT * FROM `{cls.__name__.lower()}` WHERE {cls.primary_key} = %s;", (key, )
+        return f"SELECT * FROM `{cls.__name__.lower()}` WHERE `{cls.primary_key}` = %s;", (key, )
 
     @classmethod
     def delete_id(cls, key):
-        return f"DELETE FROM `{cls.__name__.lower()}` WHERE {cls.primary_key} = %s;", (key, )
-
+        return f"DELETE FROM `{cls.__name__.lower()}` WHERE `{cls.primary_key}` = %s;", (key, )
 
     @classmethod
-    def model_construct(cls, obj: dict):
-        return cls(**{
-            field: json.loads(value) if cls.model_fields[field].annotation == dict else value 
-                for field, value in obj.items()
-        })
+    def from_db(cls, obj: Optional[dict]):
+        """Исправлено: Защита от None и безопасный парсинг JSON полей."""
+        if not obj:
+            return None
+        
+        prepared = {}
+        for field, value in obj.items():
+            if field not in cls.model_fields:
+                continue
+            
+            # Если поле в базе данных представлено строкой JSON, парсим его обратно в dict
+            if cls.model_fields[field].annotation == dict and isinstance(value, str):
+                try:
+                    prepared[field] = json.loads(value) if value else {}
+                except Exception:
+                    prepared[field] = {}
+            else:
+                prepared[field] = value
+        return cls(**prepared)
+
 
 class DB:
     def __init__(self):
-        self.user = os.getenv('DB_USER')
-        self.password = os.getenv('DB_PASSWORD')
-        self.host = os.getenv('DB_HOST')
-        self.name = os.getenv('DB_NAME')
+        # На PythonAnywhere лучше подстраховаться дефолтными значениями, если .env не прочитался
+        self.user = os.getenv('DB_USER', 'GeneralSoldatov')
+        self.password = os.getenv('DB_PASSWORD', 'ваш_пароль')
+        self.host = os.getenv('DB_HOST', '://pythonanywhere-services.com')
+        self.name = os.getenv('DB_NAME', 'GeneralSoldatov\$flask_bot')
 
     def get_db_connection(self):
-        """Функция создает и возвращает чистое подключение к MySQL"""
         return pymysql.connect(
             host=self.host,
             user=self.user,
             password=self.password,
             database=self.name,
             charset='utf8mb4',
-            # Возвращает строки в виде удобных словарей {'id': 1, 'name': 'test'} вместо кортежей
             cursorclass=pymysql.cursors.DictCursor 
         )
 
     def create_tables(self, clses=BaseTable):
         connection = self.get_db_connection()
-        for cls in clses.__subclasses__():
-            try:
-                with connection.cursor() as cursor:
-                    # Тестовый запрос проверки связи
-                    query = cls.create_table()
-                    cursor.execute(query)
-                
-            except Exception as e:
-                logger.error(e)
-                continue        
-        connection.commit()
-        connection.close()
+        try:
+            for cls in clses.__subclasses__():
+                try:
+                    with connection.cursor() as cursor:
+                        query = cls.create_table()
+                        cursor.execute(query)
+                except Exception as e:
+                    logger.error(f"Ошибка создания таблицы {cls.__name__}: {e}")
+            connection.commit()
+        finally:
+            connection.close()
 
     def drop_table(self, TableCls: type):
         if not isinstance(TableCls, type):
             raise TypeError("Требуется передать класс, а не экземпляр")
         connection = self.get_db_connection()
-        with connection.cursor() as cursor:
-            cursor.execute(TableCls.drop())
-            connection.commit()
-        logger.info(f"Таблица {TableCls.__name__.lower()} удалена.")
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(TableCls.drop())
+                connection.commit()
+            logger.info(f"Таблица {TableCls.__name__.lower()} удалена.")
+        finally:
+            connection.close()
+
+    def save(self, table: BaseTable):
+        """Рекомендуемый метод вместо insert: Безопасно сохраняет состояние (создает или обновляет)."""
+        query, params = table.replace()
+        connection = self.get_db_connection()
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(query, params)
+                connection.commit()
+        finally:
+            connection.close()
 
     def insert(self, table: BaseTable):
         query, params = table.insert()
         connection = self.get_db_connection()
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-            connection.commit()
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(query, params)
+                connection.commit()
+        finally:
+            connection.close()
 
     def update(self, table: BaseTable):
         query, params = table.update()
         connection = self.get_db_connection()
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-            connection.commit()
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(query, params)
+                connection.commit()
+        finally:
+            connection.close()
 
     def select(self, TableCls: type):
         if not isinstance(TableCls, type):
             raise TypeError("Требуется передать класс, а не экземпляр")
         connection = self.get_db_connection()
-        with connection.cursor() as cursor:
-            cursor.execute(TableCls.select())
-            return [TableCls.model_construct(row) for row in cursor.fetchall()]
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(TableCls.select())
+                return [TableCls.from_db(row) for row in cursor.fetchall()]
+        finally:
+            connection.close()
 
     def select_id(self, TableCls: type, key: Any):
+        """Исправлено: Полная защита от NoneType ошибок."""
         if not isinstance(TableCls, type):
             raise TypeError("Требуется передать класс, а не экземпляр")
+        connection = self.get_db_connection()
         try:
             query, params = TableCls.select_id(key)
-            connection = self.get_db_connection()
             with connection.cursor() as cursor:
                 cursor.execute(query, params)
-                return TableCls.model_validate(cursor.fetchone())
+                row = cursor.fetchone()
+                if row is None:
+                    return None  # Возвращаем None, если записи нет (FSM поймет это)
+                return TableCls.from_db(row)
         except Exception as e:
             logger.error(e)
+            return None
+        finally:
+            connection.close()
 
     def delete_id(self, TableCls: type, key: Any):
         if not isinstance(TableCls, type):
             raise TypeError("Требуется передать класс, а не экземпляр")
         query, params = TableCls.delete_id(key)
         connection = self.get_db_connection()
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-            connection.commit()
-
-    def drop_table(self, TableCls: type):
-        if not isinstance(TableCls, type):
-            raise TypeError("Требуется передать класс, а не экземпляр")
-        connection = self.get_db_connection()
-        with connection.cursor() as cursor:
-            cursor.execute(TableCls.drop())
-            connection.commit()
-        logger.info(f"Таблица {TableCls.__name__.lower()} удалена.")
-
-    def query(self, text_query: str, data_query: tuple):
         try:
-            connection = self.get_db_connection()
             with connection.cursor() as cursor:
-                cursor.execute(text_query, data_query)
-                return cursor.fetchall()
-        except Exception as e:
-            logger.error(e)
-
-  
+                cursor.execute(query, params)
+                connection.commit()
+        finally:
+            connection.close()
