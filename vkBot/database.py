@@ -82,14 +82,49 @@ class BaseTable(BaseModel):
         return f"CREATE TABLE IF NOT EXISTS {cls.__name__.lower()} ({field}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
 
     def insert(self):
-        placeholders = ", ".join(["%s"] * len(self.__class__.model_fields))
-        params = tuple(self.model_dump().values())
-        return f"INSERT INTO {self.__class__.__name__.lower()} VALUES ({placeholders})", params
+        table_name = self.__class__.__name__.lower()
+            
+        # 2. Получаем все поля и конвертируем словари/списки в JSON-строки
+        raw_data = self.model_dump()
+        clean_params = []
+        for val in raw_data.values():
+            if isinstance(val, (dict, list)):
+                # Превращаем словари Python в строки JSON, чтобы MySQL их принял
+                clean_params.append(json.dumps(val, ensure_ascii=False))
+            else:
+                clean_params.append(val)
+                
+        fields = list(raw_data.keys())
+        set_clause = ", ".join([f"{field} = %s" for field in fields])
+        
+        query = f"INSERT INTO {table_name} SET {set_clause} WHERE id = %s"
+        params = tuple(clean_params) + (raw_data.get('id'),)
+        
+        return query, params
+        # placeholders = ", ".join(["%s"] * len(self.__class__.model_fields))
+        # params = tuple(self.model_dump().values())
+        # return f"INSERT INTO {self.__class__.__name__.lower()} VALUES ({placeholders})", params
 
     def update(self):
-        placeholders = ", ".join(["%s"] * len(self.__class__.model_fields))
-        params = tuple(self.model_dump().values())
-        return f"UPDATE INTO {self.__class__.__name__.lower()} VALUES ({placeholders})", params
+        table_name = self.__class__.__name__.lower()
+    
+        # 2. Получаем все поля и конвертируем словари/списки в JSON-строки
+        raw_data = self.model_dump()
+        clean_params = []
+        for val in raw_data.values():
+            if isinstance(val, (dict, list)):
+                # Превращаем словари Python в строки JSON, чтобы MySQL их принял
+                clean_params.append(json.dumps(val, ensure_ascii=False))
+            else:
+                clean_params.append(val)
+                
+        fields = list(raw_data.keys())
+        set_clause = ", ".join([f"{field} = %s" for field in fields])
+        
+        query = f"UPDATE {table_name} SET {set_clause} WHERE id = %s"
+        params = tuple(clean_params) + (raw_data.get('id'),)
+        
+        return query, params
 
     @classmethod
     def select(cls):
