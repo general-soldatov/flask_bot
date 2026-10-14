@@ -7,8 +7,8 @@ from app.filters import SourcePayload, Button
 from app.config.config import ADMIN
 from app.config.dictionary import lexicon, reference
 from app.features.user_api import Contingent
-# from app.database import ManageVK, Users, Students
-from app.ydb_connect import ManageVK, Users, Students
+from app.database import ManageVK, Users, Students
+# from app.ydb_connect import ManageVK, Users, Students
 
 import logging
 import json

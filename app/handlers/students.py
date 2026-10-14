@@ -8,8 +8,8 @@ from vkBot.fsm.state import State, StatesGroup
 from vkBot.fsm.context import FSMContext
 from vkBot.filters import StateFilter
 from app.filters import SourcePayload, Button
-# from app.database import ManageVK, Students, Stepik
-from app.ydb_connect import ManageVK, Students
+from app.database import ManageVK, Students, Stepik
+# from app.ydb_connect import ManageVK, Students
 from app.features.stepik import get_step_id
 import logging
 
