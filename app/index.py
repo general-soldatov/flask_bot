@@ -9,9 +9,9 @@ from app.config.dictionary import lexicon
 from app.filters import SourcePayload, Helping, GetKey, Button
 import app.keyboards as key
 from app.features.schedule import Schedule
-from app.database import Users, ManageVK, Students, MySQLStorage
-# from app.ydb_connect import Users, ManageVK, YQLStorage, Students, BaseTable
-# from app.handlers import greeting_user, students, admin
+# from app.database import Users, ManageVK, Students, MySQLStorage
+from app.ydb_connect import Users, ManageVK, YQLStorage, Students
+from app.handlers import greeting_user, students, admin
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -91,14 +91,10 @@ def text(message: Message):
 
 
 def handler(event: Dict[str, Any], context):
-    # dp.include_router(greeting_user.rt)
-    # dp.include_router(students.rt)
-    # dp.include_router(admin.rt)
+    dp.include_router(greeting_user.rt)
+    dp.include_router(students.rt)
+    dp.include_router(admin.rt)
     dp.include_router(rt)
 
-    # with SQLBucket(Path("/tmp/vk-users.db"), 'phys-bot', 
-    #             "databases/vk-users.db", session, s3_config, ManageVK) as db:
     db = ManageVK()
-    # db.create_tables(BaseTable)
-    # dp.handler(event, context, context_data={'db': db}, storage=YQLStorage(db))
-    dp.run_sinc(event, context, context_data={'db': db}, storage=MySQLStorage(db))
+    dp.run_sinc(event, context, context_data={'db': db}, storage=YQLStorage(db))
