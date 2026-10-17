@@ -91,10 +91,10 @@ def text(message: Message):
 
 
 def handler(event: Dict[str, Any], context):
-    dp.include_router(greeting_user.rt)
-    dp.include_router(students.rt)
-    dp.include_router(admin.rt)
+    # dp.include_router(greeting_user.rt)
+    # dp.include_router(students.rt)
+    # dp.include_router(admin.rt)
     dp.include_router(rt)
 
     db = ManageVK()
-    dp.handler(event, context, context_data={'db': db}, storage=MySQLStorage(db))
+    return dp.handler(event, context, context_data={'db': db}, storage=MySQLStorage(db))
