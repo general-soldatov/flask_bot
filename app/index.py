@@ -97,4 +97,4 @@ def handler(event: Dict[str, Any], context):
     dp.include_router(rt)
 
     db = ManageVK()
-    dp.run_sinc(event, context, context_data={'db': db}, storage=MySQLStorage(db))
+    dp.handler(event, context, context_data={'db': db}, storage=MySQLStorage(db))
