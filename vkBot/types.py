@@ -69,7 +69,7 @@ class Bot:
         self.api_version = api_version
         self.base_url = "https://api.vk.com/method"
         # self.session = vk.API(token, v=self.api_version)
-        vk_session = vk_api.VkApi(token=self.token, api_version=self.api_version)
+        vk_session = vk_api.VkApi(token=self.token, api_version=self.api_version, proxy='http://proxy.server:3128')
         self.vk = vk_session.get_api()
 
     def send_message(
