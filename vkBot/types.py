@@ -11,6 +11,17 @@ from .keyboard.button import ReplyKeyboard
 from enum import Enum
 import vk_api
 
+import requests
+
+# 1. Создаем стандартную сессию requests
+session = requests.Session()
+
+# 2. Передаем в неё прокси PythonAnywhere
+session.proxies = {
+    'http': 'http://proxy.server:3128',
+    'https': 'http://proxy.server:3128',
+}
+
 logger = logging.getLogger(__name__)
 
 class PayloadAction:
@@ -69,7 +80,7 @@ class Bot:
         self.api_version = api_version
         self.base_url = "https://api.vk.com/method"
         # self.session = vk.API(token, v=self.api_version)
-        vk_session = vk_api.VkApi(token=self.token, api_version=self.api_version, proxy='http://proxy.server:3128')
+        vk_session = vk_api.VkApi(token=self.token, api_version=self.api_version, session=session)
         self.vk = vk_session.get_api()
 
     def send_message(
