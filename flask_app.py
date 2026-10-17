@@ -38,7 +38,7 @@ def handle_post():
                 PROCESSED_EVENTS.append(event_id)
                 if len(PROCESSED_EVENTS) > MAX_CACHE_SIZE:
                     PROCESSED_EVENTS.pop(0) 
-            handler(request, {})
+            handler(data, {})
             # return jsonify({"status": "success", "received_json_user": username}), 200
         return Response('ok', mimetype='text/plain')
     except Exception as e:

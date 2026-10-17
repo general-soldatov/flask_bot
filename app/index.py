@@ -95,7 +95,6 @@ def handler(event: Dict[str, Any], context):
     # dp.include_router(students.rt)
     # dp.include_router(admin.rt)
     dp.include_router(rt)
-    bot.send_message(ADMIN, 'Start data')
 
     db = ManageVK()
     return dp.handler(event, context, context_data={'db': db}, storage=MySQLStorage(db))
