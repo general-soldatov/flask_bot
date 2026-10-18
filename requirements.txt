@@ -37,3 +37,4 @@ Werkzeug==3.1.9
 yarl==1.25.1
 ydb==3.33.2
 ydb[yc]
+gunicorn==23.0.0

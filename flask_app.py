@@ -1,8 +1,4 @@
 import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "/home/GeneralSoldatov/mysite/")))
-
-
 from flask import Flask, request, render_template, Response
 from dotenv import load_dotenv
 from pathlib import Path
@@ -63,3 +59,8 @@ def hello_index(name=None):
     
 
 #     return render_template('index.html', name=name, infos=infos)
+
+if __name__ == "__main__":
+    # Обязательно слушаем хост 0.0.0.0 и порт из переменной окружения
+    port = int(os.environ.get("PORT", 80))
+    app.run(host="0.0.0.0", port=port)
