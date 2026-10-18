@@ -36,6 +36,6 @@ Werkzeug==3.1.9
 yarl==1.25.1
 ydb==3.33.2
 ydb[yc]
-Flask==2.2.2
-Flask-CORS==3.0.10
+Flask==2.3.3
+Werkzeug==2.3.7
 gunicorn==20.1.0

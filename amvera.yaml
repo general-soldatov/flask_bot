@@ -1,7 +1,0 @@
-meta:
-  environment: python
-  toolchain:
-    name: pip
-
-run:
-  command: pip install -r requirements.txt && gunicorn flask_app:app
