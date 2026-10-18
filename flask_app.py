@@ -22,7 +22,8 @@ def handle_post():
         
             # Обработка подтверждения
             if data.get('type') == 'confirmation':
-                return Response(os.getenv("CONFIRMATION_CODE"), mimetype='text/plain')
+                # return Response(os.getenv("CONFIRMATION_CODE"), mimetype='text/plain')
+                return os.getenv("CONFIRMATION_CODE"), 200
             event_id = data.get('event_id')
             if event_id:
                 if event_id in PROCESSED_EVENTS:
