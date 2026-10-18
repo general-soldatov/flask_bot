@@ -85,9 +85,10 @@ class BaseTable(BaseModel):
                   for field_name, field_info in cls.model_fields.items()]
         fields.extend([f'{field_name} {DATA.get(field_info.return_type, JsonDocument).__name__}' 
                   for field_name, field_info in cls.model_computed_fields.items()])
+        fields_sql = ',\n'.join(fields)
         text = f"""
 CREATE TABLE IF NOT EXISTS `{cls.__name__.lower()}` (
-{',\n'.join(fields)}"""
+{fields_sql}"""
         if cls.primary_key:
             text += f",\nPRIMARY KEY ({cls.primary_key})" 
         text += "\n);"
