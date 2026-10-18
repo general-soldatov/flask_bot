@@ -5,4 +5,4 @@ meta:
     version: 3.11
 
 run:
-  command: gunicorn app:app --bind 0.0.0.0:$PORT
+  command: gunicorn flask_app:app

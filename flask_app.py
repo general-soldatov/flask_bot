@@ -61,6 +61,5 @@ def hello_index(name=None):
 #     return render_template('index.html', name=name, infos=infos)
 
 if __name__ == "__main__":
-    # Обязательно слушаем хост 0.0.0.0 и порт из переменной окружения
-    port = int(os.environ.get("PORT", 80))
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
