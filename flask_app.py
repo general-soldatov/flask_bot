@@ -31,7 +31,7 @@ def handle_post():
                 # 3. Принудительно ставим тип "сырой текст"
                 response.headers["Content-Type"] = "text/plain"
 
-                return response
+                return Response(os.getenv("CONFIRMATION_CODE", "").strip(), status=200, content_type="text/plain; charset=utf-8")
             
             event_id = data.get('event_id')
             if event_id:
