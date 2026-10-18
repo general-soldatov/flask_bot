@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, render_template, Response
+from flask import Flask, request, render_template, Response, make_response
 from dotenv import load_dotenv
 from pathlib import Path
 env_path = Path(__file__).parent / '.env'
@@ -23,11 +23,16 @@ def handle_post():
             # Обработка подтверждения
             if data.get('type') == 'confirmation':
                 # return Response(os.getenv("CONFIRMATION_CODE"), mimetype='text/plain')
-                return Response(
-                os.getenv("CONFIRMATION_CODE"),
-                status=200,
-                content_type="text/plain; charset=utf-8",
-            )
+                response = make_response(os.getenv("CONFIRMATION_CODE"))
+
+                # 2. Полностью очищаем все заголовки, которые сгенерировал Flask
+                response.headers.clear()
+
+                # 3. Принудительно ставим тип "сырой текст"
+                response.headers["Content-Type"] = "text/plain"
+
+                return response
+            
             event_id = data.get('event_id')
             if event_id:
                 if event_id in PROCESSED_EVENTS:
