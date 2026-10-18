@@ -11,8 +11,8 @@ from app.config.dictionary import lexicon, reference
 import app.keyboards as key
 # from app.features.copy_message import MessageCopier
 from app.filters import SourcePayload
-from app.database import ManageVK
-# from app.ydb_connect import ManageVK
+# from app.database import ManageVK
+from app.ydb_connect import ManageVK
 from app.features.stepik import update_data_stepik
 
 rt = Router()
