@@ -3,6 +3,9 @@ meta:
   toolchain:
     name: pip
 
+build:
+  requirements: requirements.txt
+
 run:
   command: gunicorn --bind 0.0.0.0:5000 flask_app:app
   containerPort: 5000
