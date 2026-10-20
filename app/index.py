@@ -90,7 +90,7 @@ def text(message: Message):
     message.answer("Я рад тебя видеть!")
 
 
-def handler(event: Dict[str, Any], context):
+async def handler(event: Dict[str, Any], context):
     dp.include_router(greeting_user.rt)
     dp.include_router(students.rt)
     dp.include_router(admin.rt)

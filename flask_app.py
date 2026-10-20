@@ -47,7 +47,7 @@ async def handle_post(request: Request):
                     PROCESSED_EVENTS.pop(0) 
             
             # Передаем данные в ваш хендлер
-            handler(data, {})
+            await handler(data, {})
             
         return PlainTextResponse(content='ok')
         
