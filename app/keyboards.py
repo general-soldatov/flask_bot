@@ -98,7 +98,7 @@ def get_tasks(tasks_lst: list, solve_task: list):
     tasks = InlineKeyboard()
     for i, item in enumerate(data[:7], 1):
         tasks.add(Callback(label=item, payload=CallbackPayload(source='tasks', action=item).model_dump_json()))
-        if i % 5 == 0:
+        if i % 4 == 0:
             tasks.row()
     tasks.row()
     tasks.add(Callback(label=lexicon.buttons['percent'], payload=json.dumps({'source': 'percent', 'action': ''})))
