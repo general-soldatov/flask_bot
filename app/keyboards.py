@@ -42,9 +42,10 @@ def get_book(subject: str):
 
 def get_temp_colab(subject):
     books = InlineKeyboard()
-    for colab in service.colab:
+    for i, colab in enumerate(service.colab):
+        if i % 2:
+            books.row()
         books.add(OpenLink(**colab))
-        books.row()
     return books
 
 schedule = InlineKeyboard()
