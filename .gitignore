@@ -3,3 +3,5 @@
 test_res.py
 test_index.py
 session.yaml
+/data/
+*/__pycache__/

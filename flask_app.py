@@ -5,12 +5,33 @@ from pathlib import Path
 env_path = Path(__file__).parent / '.env'
 load_dotenv(dotenv_path=env_path)
 
+
+# from fastapi import FastAPI
+# from fastapi.responses import JSONResponse
+# from pydantic import BaseModel
+# from typing import Optional
+
 from app.index import handler
 
 app = Flask(__name__)
 
+# class Body(BaseModel):
+#     group_id: int
+#     type: str
+#     event_id: Optional[str] = None
+#     v: Optional[str] = None
+#     object: Optional[dict]
+
+# app = FastAPI()
+
 PROCESSED_EVENTS = []
 MAX_CACHE_SIZE = 100
+
+# @app.post('/vk-bot/webhook')
+# async def webhook(*, body: Body):
+#     if body.type == 'confirmation':
+#         return JSONResponse(os.getenv("CONFIRMATION_CODE", "").strip())
+
 
 @app.route('/vk-bot/webhook', methods=['POST'])
 def handle_post():
@@ -62,4 +83,4 @@ def hello_index(name=None):
 #     return render_template('index.html', name=name, infos=infos)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000) 
