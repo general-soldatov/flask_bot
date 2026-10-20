@@ -91,11 +91,12 @@ def set_answer(user_id: int, cmid: int):
     return answer
 
 def get_tasks(tasks_lst: list, solve_task: list):
+    data = tasks_lst.copy()
     for item in solve_task:
-        if item in tasks_lst:
-            tasks_lst.remove(item)
+        if item in data:
+            data.remove(item)
     tasks = InlineKeyboard()
-    for i, item in enumerate(tasks_lst[:7], 1):
+    for i, item in enumerate(data[:7], 1):
         tasks.add(Callback(label=item, payload=CallbackPayload(source='tasks', action=item).model_dump_json()))
         if i % 5 == 0:
             tasks.row()
