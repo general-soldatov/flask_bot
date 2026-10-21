@@ -35,6 +35,6 @@ vk_api==11.10.1
 yarl==1.25.1
 ydb==3.33.2
 ydb[yc]
-Flask==2.3.3
 Werkzeug==2.3.7
 gunicorn==20.1.0
+aiovk
