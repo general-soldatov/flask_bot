@@ -10,7 +10,8 @@ from fastapi.staticfiles import StaticFiles
 env_path = Path(__file__).parent / '.env'
 load_dotenv(dotenv_path=env_path)
 
-from app.index import handler
+from app.ydb_connect import ManageVK
+from app.index import dp, db
 
 app = FastAPI()
 
@@ -23,14 +24,14 @@ PROCESSED_EVENTS = []
 MAX_CACHE_SIZE = 100
 
 @app.post('/vk-bot/webhook')
-async def handle_post(request: Request):
+async def handle_post(request: Request): # Убрали async
     try:
-        # Проверяем, является ли контент JSON-данными
         content_type = request.headers.get("content-type", "")
         if "application/json" in content_type:
+            # В синхронной функции FastAPI нужно использовать специальный фокус 
+            # или запустить асинхронный метод через loop, но проще сделать так:
             data = await request.json()
             
-            # Обработка подтверждения VK
             if data.get('type') == 'confirmation':
                 confirmation_code = os.getenv("CONFIRMATION_CODE", "").strip()
                 return PlainTextResponse(content=confirmation_code, status_code=200)
@@ -38,21 +39,19 @@ async def handle_post(request: Request):
             event_id = data.get('event_id')
             if event_id:
                 if event_id in PROCESSED_EVENTS:
-                    # Если ID дублируется — возвращаем 'ok'
                     return PlainTextResponse(content='ok')
                 
-                # Запоминаем новый ID
                 PROCESSED_EVENTS.append(event_id)
                 if len(PROCESSED_EVENTS) > MAX_CACHE_SIZE:
                     PROCESSED_EVENTS.pop(0) 
             
-            # Передаем данные в ваш хендлер
-            handler(data, {})
+            text = await dp.feed_webhook(data, context_data={'db': db})
             
-        return PlainTextResponse(content='ok')
+        return PlainTextResponse(content=text)
         
     except Exception as e:
-        # Возвращаем текст ошибки в случае сбоя
+        # Логируем ошибку в консоль Amvera, чтобы вы её видели!
+        print(f"Ошибка в вебхуке: {e}") 
         return PlainTextResponse(content=str(e), status_code=500)
 
 

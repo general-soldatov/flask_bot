@@ -5,3 +5,4 @@ test_index.py
 session.yaml
 /data/
 */__pycache__/
+*.zip

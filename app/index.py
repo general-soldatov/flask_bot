@@ -2,8 +2,10 @@ import os
 from typing import Dict, Any
 import logging
 
-from vkBot import Message, Dispatcher, Bot, Router, MessageEventObject
-from vkBot.filters import CommandStart
+# from vkBot import Message, Dispatcher, Bot, Router, MessageEventObject
+from aiovkBot import Bot, Dispatcher, Router, Message, MessageEventObject
+# from vkBot.filters import CommandStart
+from aiovkBot.filters import CommandStart
 
 from app.config.dictionary import lexicon
 from app.filters import SourcePayload, Helping, GetKey, Button
@@ -20,81 +22,84 @@ TOKEN = os.getenv('ACCESS_KEY')
 ADMIN = os.getenv('ADMIN')
 
 bot = Bot(TOKEN)
+db = ManageVK()
 
-dp = Dispatcher(bot)
+dp = Dispatcher(bot, storage=YQLStorage(db))
 
 rt = Router('analys')
 
 @dp.message(CommandStart())
-def start(message: Message, db: ManageVK):
-    user = message.get_user()
+async def start(message: Message, db: ManageVK):
+    user = await message.get_user()
     if user:
-        if not db.get_user_by_id(user.id): 
+        if not await db.get_user_by_id(user.id): 
             data = Users(id=message.from_id, first_name=user.first_name, last_name=user.last_name, subject='')
-            db.insert(data)
-        message.answer(lexicon.users['start'].format(name=user.first_name), keyboard=key.get_subject().as_markup())
+            await db.insert(data)
+        await message.answer(lexicon.users['start'].format(name=user.first_name), keyboard=key.get_subject().as_markup())
     else:
-        if not db.get_user_by_id(user.id): 
+        if not await db.get_user_by_id(user.id): 
             data = Users(id=message.from_id, first_name='user.first_name', last_name='user.last_name', subject='')
-            db.insert(data)
-        message.answer(lexicon.users['start'].format(name='студент!'), keyboard=key.get_subject().as_markup())
+            await db.insert(data)
+        await message.answer(lexicon.users['start'].format(name='студент!'), keyboard=key.get_subject().as_markup())
 
 @dp.message(Helping())
-def cmd_help(message: Message):
-    user = message.get_user()
-    message.answer(lexicon.users['help'].format(name=user.first_name), keyboard=key.contact.as_markup())
+async def cmd_help(message: Message):
+    user = await message.get_user()
+    await message.answer(lexicon.users['help'].format(name=user.first_name), keyboard=key.contact.as_markup())
 
 @dp.callback_query(SourcePayload('subject'))
-def button(event: MessageEventObject, db: ManageVK):
+async def button(event: MessageEventObject, db: ManageVK):
     subject = event.payload_model.action
-    if db.set_subject_user(event.user_id, subject):
-        event.edit_message(lexicon.users['set_subject'].format(subject=lexicon.subject[subject]), 
+    if await db.set_subject_user(event.user_id, subject):
+        await event.edit_message(lexicon.users['set_subject'].format(subject=lexicon.subject[subject]), 
                            keyboard=key.start_pack(subject).as_markup())
     else:
-        event.edit_message(lexicon.users['error'])
+        await event.edit_message(lexicon.users['error'])
 
 @dp.message(GetKey())
-def cmd_keyboard(message: Message, db: ManageVK):
-    user = message.get_user()
-    info = db.get_info(user.id)
+async def cmd_keyboard(message: Message, db: ManageVK):
+    user = await message.get_user()
+    info = await db.get_info(user.id)
     is_register = isinstance(info, Students)
     if info:
-        message.answer(lexicon.users['menu'], keyboard=key.start_pack(info.subject, is_register).as_markup())
+        await message.answer(lexicon.users['menu'], keyboard=key.start_pack(info.subject, is_register).as_markup())
     else:
-        message.answer()
+        await message.answer()
 
 @dp.message(Button('books'))
-def cmd_keyboard(message: Message, db: ManageVK):
-    user = message.get_user()
-    info = db.get_user_by_id(user.id)
-    message.answer(lexicon.users['books'], keyboard=key.get_book(info.subject).as_markup())
+async def cmd_keyboard(message: Message, db: ManageVK):
+    user = await message.get_user()
+    info = await db.get_user_by_id(user.id)
+    await message.answer(lexicon.users['books'], keyboard=key.get_book(info.subject).as_markup())
 
 @dp.message(Button('schedule'))
-def cmd_schedule(message: Message):
-    weekday, shedules = Schedule().get_call('today')
+async def cmd_schedule(message: Message):
+    weekday, shedules = await Schedule().get_call('today')
     text = f"# {weekday}\n"
     text += '\n'.join([f'{key}: {value}' for key, value in shedules.items()])
-    message.answer(text, keyboard=key.schedule.as_markup())
+    await message.answer(text, keyboard=key.schedule.as_markup())
 
 @dp.callback_query(SourcePayload('schedule'))
-def edit_schedule(event: MessageEventObject):
-    weekday, shedules = Schedule().get_call(event.payload_model.action)
+async def edit_schedule(event: MessageEventObject):
+    weekday, shedules = await Schedule().get_call(event.payload_model.action)
     text = f"# {weekday}\n"
     text += '\n'.join([f'{key}: {value}' for key, value in shedules.items()])
-    event.edit_message(text, keyboard=key.schedule.as_markup())
+    await event.edit_message(text, keyboard=key.schedule.as_markup())
     
 
 
 @rt.message()
-def text(message: Message):
-    message.answer("Я рад тебя видеть!")
+async def text(message: Message):
+    await message.answer("Я рад тебя видеть!")
 
+dp.include_router(greeting_user.rt)
+dp.include_router(students.rt)
+dp.include_router(admin.rt)
+dp.include_router(rt)
 
-def handler(event: Dict[str, Any], context):
-    dp.include_router(greeting_user.rt)
-    dp.include_router(students.rt)
-    dp.include_router(admin.rt)
-    dp.include_router(rt)
+# def handler(event: Dict[str, Any], context):
+    
+    
 
-    db = ManageVK()
-    dp.run_sinc(event, context, context_data={'db': db}, storage=YQLStorage(db))
+    
+    # dp.run_sinc(event, context, context_data={'db': db}, storage=YQLStorage(db))

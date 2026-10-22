@@ -10,6 +10,7 @@ GROUP_ID = os.getenv('GROUP_ID', None)
 ADMIN = os.getenv('ADMIN')
 PHYS = os.getenv('PHYS')
 TERMEX = os.getenv('TERMEX')
+DIR = os.getenv('DIR')
 
 
 class YamlProject(BaseModel):
@@ -73,4 +74,4 @@ class Service(YamlProject):
     course: Dict[str, int]
     colab: List[Dict[str, str]]
 
-service = Service.model_validate_yaml('data/session.yaml')
+service = Service.model_validate_yaml(os.path.join(DIR, 'session.yaml'))

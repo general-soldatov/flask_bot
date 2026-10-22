@@ -1,7 +1,8 @@
-from vkBot import Message, MessageEventObject
-from vkBot.filters import BaseFilter
+# from vkBot import Message, MessageEventObject
+from aiovkBot import Message, MessageEventObject
+from aiovkBot.filters import BaseFilter
+# from vkBot.filters import BaseFilter
 from typing import List
-import json
 import logging
 
 logger = logging.getLogger(__name__)

@@ -42,9 +42,10 @@ def get_book(subject: str):
 
 def get_temp_colab(subject):
     books = InlineKeyboard()
-    for colab in service.colab:
+    for i, colab in enumerate(service.colab, 1):
+        if i % 2:
+            books.row()
         books.add(OpenLink(**colab))
-        books.row()
     return books
 
 schedule = InlineKeyboard()
@@ -91,14 +92,14 @@ def set_answer(user_id: int, cmid: int):
     return answer
 
 def get_tasks(tasks_lst: list, solve_task: list):
-    task_data = tasks_lst.copy()
+    data = tasks_lst.copy()
     for item in solve_task:
-        if item in task_data:
-            task_data.remove(item)
+        if item in data:
+            data.remove(item)
     tasks = InlineKeyboard()
-    for i, item in enumerate(tasks_lst[:7], 1):
+    for i, item in enumerate(data[:7], 1):
         tasks.add(Callback(label=item, payload=CallbackPayload(source='tasks', action=item).model_dump_json()))
-        if i % 5 == 0:
+        if i % 4 == 0:
             tasks.row()
     tasks.row()
     tasks.add(Callback(label=lexicon.buttons['percent'], payload=json.dumps({'source': 'percent', 'action': ''})))

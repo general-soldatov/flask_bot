@@ -8,7 +8,7 @@ build:
   useCache: true
 run:
   persistenceMount: /data
-  command: gunicorn --bind 0.0.0.0:5000 flask_app:app
+  command: uvicorn fast_app:app --host 0.0.0.0 --port 5000
   containerPort: 5000
   russianTrustedCa: false
   singleton: true

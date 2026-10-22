@@ -1,10 +1,9 @@
 # from token import PERCENT
-import httpx
-from vkBot import Router, Message, MessageEventObject, Bot, F
-from vkBot.fsm.state import State, StatesGroup
-from vkBot.fsm.context import FSMContext
-from vkBot.filters import StateFilter
+# import httpx
+# from vkBot import Router, Message, MessageEventObject, Bot, F
+from aiovkBot import Router, MessageEventObject, Message, Bot, F
 
+from app.features.user_api import Contingent
 from app.config.config import ADMIN
 from app.filters import SourcePayload, Mailer
 from app.config.dictionary import lexicon, reference
@@ -18,53 +17,49 @@ from app.features.stepik import update_data_stepik
 rt = Router()
 
 @rt.callback_query(SourcePayload('check_task'))
-def set_task(event: MessageEventObject, db: ManageVK, bot: Bot):
+async def set_task(event: MessageEventObject, db: ManageVK, bot: Bot):
     info = event.payload_model
-    if db.add_task(info.user_id, info.task_id, info.score):
-        event.edit_message(lexicon.admin['task_score'].format(name=info.fullname, score=info.score, task=info.task_id))
-        bot.vk.messages.send(user_id=info.user_id, random_id=0,
-                                        peer_id=event.peer_id,
-                                        message=lexicon.students['task_score'].format(task=info.task_id, score=info.score))
+    if await db.add_task(info.user_id, info.task_id, info.score):
+        await event.edit_message(lexicon.admin['task_score'].format(name=info.fullname, score=info.score, task=info.task_id))
+        await bot.send_message(info.user_id, lexicon.students['task_score'].format(task=info.task_id, score=info.score))
     else:
         event.send_message(lexicon.admin['error'])
 
 
 @rt.callback_query(SourcePayload('check_percent'))
-def set_percent(event: MessageEventObject, db: ManageVK, bot: Bot):
+async def set_percent(event: MessageEventObject, db: ManageVK, bot: Bot):
     info = event.payload_model
-    if db.set_percent(info.user_id, int(info.score)):
-        event.edit_message(lexicon.admin['percent'].format(name=info.fullname, score=info.score))
-        bot.vk.messages.send(user_id=info.user_id, random_id=0,
-                                        peer_id=event.peer_id,
-                                        message=lexicon.students['percent'].format(score=info.score))
+    if await db.set_percent(info.user_id, int(info.score)):
+        await event.edit_message(lexicon.admin['percent'].format(name=info.fullname, score=info.score))
+        await bot.send_message(info.user_id, lexicon.students['percent'].format(score=info.score))
     else:
-        event.send_message(lexicon.admin['error'])
+        await event.send_message(lexicon.admin['error'])
 
 @rt.message(F.text.startswith_ignore_case('рейти'))
-def set_rate(message: Message, db: ManageVK, bot: Bot):
-    message.answer('Please, wait...')
+async def set_rate(message: Message):
+    await message.answer('Please, wait...')
     try:
-        response = httpx.get('https://d5dvtf5ioi8q69ckjelk.apigw.yandexcloud.net/vk_bot/rate').json()
+        response = await Contingent.get_query('https://d5dvtf5ioi8q69ckjelk.apigw.yandexcloud.net/vk_bot/rate')
         if response:
             time_data = float(response[0]['time']) + float(response[1]['time'])
-            message.answer(lexicon.admin['rate'].format(termex=response[0]['message'],
+            await message.answer(lexicon.admin['rate'].format(termex=response[0]['message'],
                                                         phys=response[1]['message'],
                                                         time_data=round(time_data, 3)))
         else:
-            message.answer('error')
+            await message.answer('error')
     except Exception as e:
-        message.answer(f'error: {e}')
+        await message.answer(f'error: {e}')
 
 @rt.message(F.text.startswith_ignore_case('степ'))
-def set_rate(message: Message, db: ManageVK, bot: Bot):
-    message.answer('Please, wait...')        
-    text, no_data = update_data_stepik(db)
-    message.answer(text)
+async def set_rate(message: Message, db: ManageVK, bot: Bot):
+    await message.answer('Please, wait...')        
+    text, no_data = await update_data_stepik(db)
+    await message.answer(text)
     for _id in no_data:
         try:
-            bot.send_message(_id, 'Ваш Stepik ID не прошёл верификацию. Попробуйте ввести ID снова.')
+            await bot.send_message(_id, 'Ваш Stepik ID не прошёл верификацию. Попробуйте ввести ID снова.')
         except Exception as e:
-            message.answer(f"Письмо {_id} не отправлено: {e}")
+            await message.answer(f"Письмо {_id} не отправлено: {e}")
 
 # @rt.message(Mailer([ADMIN]))
 # def cmd_mailer(message: Message):

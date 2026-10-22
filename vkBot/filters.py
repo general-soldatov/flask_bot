@@ -1,6 +1,7 @@
 from typing import Any, Optional
 from .types import Message, MessageEventObject
-from vkBot.fsm import State
+# from vkBot.fsm import State
+from aiovkBot.fsm import State
 import logging
 
 logger = logging.getLogger(__name__)

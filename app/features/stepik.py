@@ -1,7 +1,7 @@
-import httpx
+import aiohttp
 from typing import Dict, Optional, List, Union
 import re
-from app.database import ManageVK, Students
+from app.ydb_connect import ManageVK, Students
 from app.config.config import service
 
 def get_step_id(data: str):
@@ -13,33 +13,32 @@ def get_step_id(data: str):
 
 class StepikParser:
     def __init__(self, config: Dict[str, str]):
-        self.token = self._get_token(**config)
+        self.config = config
+        # self.token = self._get_token(**config)
         self.base_url = "https://stepik.org/api"
-        self.headers = {
-            'Authorization': f'Bearer {self.token}'
-        }
+        self.headers = {}
     
-    @staticmethod
-    def _get_token(client_id, client_secret):
-        auth = httpx.BasicAuth(client_id, client_secret)
-        resp = httpx.post('https://stepik.org/oauth2/token/',
-                                data={'grant_type': 'client_credentials'}, auth=auth)
-        return resp.json()['access_token']
+    async def get_token(self):
+        auth = aiohttp.BasicAuth(**self.config)
+        async with aiohttp.ClientSession() as session:
+            async with session.post('https://stepik.org/oauth2/token/',
+                            data={'grant_type': 'client_credentials'}, auth=auth) as response:
+                data = await response.json(content_type=None)
+                self.token = data.get('access_token')
+                self.headers = {
+                        'Authorization': f'Bearer {self.token}'
+                }
 
     
-    def _request(self, endpoint: str, params: Optional[Dict] = None) -> Dict:
+    async def _request(self, endpoint: str, params: Optional[Dict] = None) -> Dict:
         """Выполнение GET-запроса к API с обработкой пагинации."""
         url = f"{self.base_url}/{endpoint}"
-        response = httpx.get(
-            url,
-            headers=self.headers,
-            params=params,
-            timeout=30
-        )
-        response.raise_for_status()
-        return response.json()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=self.headers, params=params, timeout=30) as response:
+                await response.raise_for_status()
+                return await response.json(content_type=None)
 
-    def get_enrollments(self, course_id: int, user_id: Optional[int] = None) -> Union[List[Dict], Dict]:
+    async def get_enrollments(self, course_id: int, user_id: Optional[int] = None) -> Union[List[Dict], Dict]:
         page = 1
         students_grades = []
 
@@ -48,9 +47,10 @@ class StepikParser:
         while True:
             # Запрашиваем страницу с оценками
             url = f"{self.base_url}/course-grades?course={course_id}&page={page}"
-            response = httpx.get(url, headers=self.headers, timeout=15)
-            response.raise_for_status()
-            data = response.json()
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=self.headers, timeout=30) as response:
+                    await response.raise_for_status()
+                    data = await response.json(content_type=None)
 
             # Парсим данные о студентах на текущей странице
             for grade in data.get("course-grades", []):
@@ -78,23 +78,24 @@ class StepikParser:
 
         return students_grades
 
-def update_data_stepik(db: ManageVK):
-    data = db.get_all_stepik()
+async def update_data_stepik(db: ManageVK):
+    data = await db.get_all_stepik()
     stepik = StepikParser(service.stepik)
+    await stepik.get_token()
     not_search = []
     grades = {}
     text = ''
     try:
-        grades[287410] = stepik.get_enrollments(287410)
-        grades[278225] = stepik.get_enrollments(278225)
+        grades[287410] = await stepik.get_enrollments(287410)
+        grades[278225] = await stepik.get_enrollments(278225)
         for elem in data:
             flag = False
-            student: Students = db.get_info(elem.id)
+            student: Students = await db.get_info(elem.id)
             for user in grades[elem.course_id]:
                 if user['user_id'] == elem.stepik_id:
                     score = user['score']
                     text += f'{student.full_name} | {score}\n'
-                    db.update_score_stepik(student.id, score)
+                    await db.update_score_stepik(student.id, score)
                     flag = True
                     break
             if not flag:
