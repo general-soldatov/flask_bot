@@ -3,7 +3,7 @@ from typing import Dict, Any
 import logging
 
 # from vkBot import Message, Dispatcher, Bot, Router, MessageEventObject
-from aiovkBot import Bot, Dispatcher, Router, Message, MessageEventObject
+from aiovkBot import Bot, Dispatcher, Router, Message, MessageEventObject, MemoryStorage
 # from vkBot.filters import CommandStart
 from aiovkBot.filters import CommandStart
 
@@ -24,8 +24,8 @@ ADMIN = os.getenv('ADMIN')
 bot = Bot(TOKEN)
 db = ManageVK()
 
-dp = Dispatcher(bot, storage=YQLStorage(db))
-
+# dp = Dispatcher(bot, storage=YQLStorage(db))
+dp = Dispatcher(bot, storage=MemoryStorage())
 rt = Router('analys')
 
 @dp.message(CommandStart())

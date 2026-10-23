@@ -17,6 +17,7 @@ from app.ydb_connect import ManageVK, Users, Students
 
 import logging
 import json
+import os
 import app.keyboards as key
 
 logger = logging.getLogger(__name__)
@@ -132,16 +133,18 @@ async def edit_schedule(event: MessageEventObject, state: FSMContext):
 
 @rt.message(StateFilter(Question.text))
 async def question(message: Message, state: FSMContext, bot: Bot):
-    await state.update_data(message_id=message.id)
+    await state.update_data(user_message_id=message.id)
     # await bot.vk.messages.delete(peer_id=message.peer_id, cmids=[data['cmid']], message_ids=data['message_id'], delete_for_all=True)
     await message.answer(
-        lexicon.users['available_reply'], keyboard=key.get_agree('question_check').as_markup())
+        lexicon.users['available_reply'], 
+        keyboard=key.get_agree('question_check').as_markup())
 
 @rt.callback_query(SourcePayload('question_check'))
 async def question_check(event: MessageEventObject, state: FSMContext, db: ManageVK, bot: Bot):
     agree = event.payload_model.action
     dt = await state.get_data()
-    id = dt.get('message_id')    
+    user_msg_id = dt.get('user_message_id')   
+
     if agree == 'yes':
         try:
             user = await db.get_info(event.user_id)
@@ -149,10 +152,16 @@ async def question_check(event: MessageEventObject, state: FSMContext, db: Manag
             user = None
         if isinstance(user, Students):
             text = lexicon.admin['question_student'].format(**user.__dict__)
-        elif isinstance(user, Users):
+        else:
             text = lexicon.admin['question_user']
-        await bot.send_message(peer_id=ADMIN, message=text, keyboard=key.set_answer(event.user_id, id).as_markup())
-        await bot.send_message_with_forward(ADMIN, 'Message', [id])
+        await bot.send_message(peer_id=ADMIN, message=text, 
+                               keyboard=key.set_answer(event.user_id, user_msg_id).as_markup())
+        # await bot.send_message_with_forward(ADMIN, 'Message', [user_msg_id])
+        import aiovk
+        async with aiovk.TokenSession(access_token=os.getenv('ACCESS_KEY')) as session:
+            api = aiovk.API(session)
+            await api.messages.send(forward_messages=user_msg_id, user_id=ADMIN, peer_id=event.peer_id, random_id=0)
+            
         # await bot.vk.messages.send(forward_messages=[id], user_id=ADMIN, peer_id=event.peer_id, random_id=0) #ВКонтакте требует параметр random_id для каждого метода messages.send, чтобы избежать дублирования сообщений.
         await event.edit_message(lexicon.users['send_question'])
     else:
