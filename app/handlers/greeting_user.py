@@ -93,7 +93,8 @@ async def register(message: Message, state: FSMContext, bot: Bot, db: ManageVK):
 @rt.callback_query(SourcePayload('register'))
 async def question_check(event: MessageEventObject, state: FSMContext, db: ManageVK, bot: Bot):
     agree = event.payload_model.action
-    data = json.loads(state.get_data()['data'])
+    dt = await state.get_data()
+    data = json.loads(dt.get('data'))
     await state.clear_state()
     if agree == 'yes':
         try:
