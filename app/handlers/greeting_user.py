@@ -1,7 +1,3 @@
-# from vkBot import Router, Message, MessageEventObject, Bot
-# from vkBot.fsm.state import State, StatesGroup
-# from vkBot.fsm.context import FSMContext
-# from vkBot.filters import StateFilter
 from aiovkBot import Router, Message, MessageEventObject, Bot
 from aiovkBot.fsm.state import State, StatesGroup
 from aiovkBot.fsm.context import FSMContext
