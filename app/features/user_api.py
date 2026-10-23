@@ -24,7 +24,7 @@ class Contingent(BaseModel):
             'termex': TERMEX,
             'phys': PHYS
         }
-        return await data.get(key, TERMEX)
+        return data.get(key, TERMEX)
 
     @staticmethod
     async def get_query(url: str):
