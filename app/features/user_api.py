@@ -9,7 +9,7 @@ class Contingent(BaseModel):
 
     @classmethod
     async def get(cls, name: str, subject: str):
-        url = cls.subject(subject)
+        url = await cls.subject(subject)
         if url:
             data: dict = await cls.get_query(url)
             search_name = name.title()
