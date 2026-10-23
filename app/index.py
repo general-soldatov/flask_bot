@@ -24,8 +24,8 @@ ADMIN = os.getenv('ADMIN')
 bot = Bot(TOKEN)
 db = ManageVK()
 
-# dp = Dispatcher(bot, storage=YQLStorage(db))
-dp = Dispatcher(bot, storage=MemoryStorage())
+dp = Dispatcher(bot, storage=YQLStorage(db))
+# dp = Dispatcher(bot, storage=MemoryStorage())
 rt = Router('analys')
 
 @dp.message(CommandStart())
