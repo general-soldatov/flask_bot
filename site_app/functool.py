@@ -1,4 +1,5 @@
 import aiohttp
+from app.ydb_connect import Stepik, Students
 
 def sum_task(data: dict) -> float:
     return sum(map(int, data.values()))
@@ -30,8 +31,17 @@ def get_fine(score: float | int, subject, profile):
             return i
     return 0
 
-def study_score(data: dict):
-    tasks = sum_task(data['tasks'])
-    tasks += sum_task(data['bonus'])
-    tasks = round(tasks * (1 + data['prize'] / 100), 1) - int(data['fine'])
+
+def study_score(data: Students, step: Stepik):
+    score = 0
+    if step:
+        score = step.score
+    coeff = {
+        'termex': 0.05,
+        'phys': 0.07
+    }
+    tasks = sum_task(data.tasks)
+    tasks += sum_task(data.bonus)
+    tasks += coeff[data.subject] * score
+    tasks = round(tasks * (1 + data.prize / 100), 1) - int(data.fine)
     return tasks

@@ -48,6 +48,7 @@ async def termex_profile(data, step):
         "quote": rater['quote'],
         "rate": tasks,
         "img": rater['image'],
+        "stepik": step.score,
         "star": get_fine(tasks, data.subject, data.profile),
         "info": {
             'Профиль': data.profile,
@@ -74,6 +75,7 @@ async def phys_profile(data, step):
         "quote": rater['quote'],
         "rate": tasks,
         "img": rater['image'],
+        "stepik": step.score,
         "star": get_fine(tasks, data.subject, data.profile),
         "info": {
             'Профиль': data.profile,

@@ -14,6 +14,7 @@ load_dotenv(dotenv_path=env_path)
 from app.index import dp, db
 
 from site_app.vk_handler import get_data
+from site_app.rate_maker import rate_score_vk
 
 app = FastAPI()
 
@@ -72,6 +73,11 @@ async def vk_bot(request: Request, name: str):
                                       context={'request': request,
                                                'student': student,
                                                'information': information})
+
+@app.get("/vk_bot/rate")
+async def dev_rate():
+    return await rate_score_vk()
+
 
 @app.get('/', response_class=HTMLResponse)
 async def hello_index(request: Request, name: str = None):
