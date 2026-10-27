@@ -12,7 +12,7 @@ from ydb.aio import iam as aio_iam
 from dotenv import load_dotenv
 from pydantic import BaseModel, computed_field
 
-from vkBot.fsm.storage.base import BaseStorage
+from aiovkBot.fsm.storage.base import BaseStorage
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +154,19 @@ class BaseTable(BaseModel):
         params = {"$key": ydb.TypedValue(key, DATATYPE.get(type(key)))}
         return (f"DECLARE $key AS {DATA.get(type(key), JsonDocument).__name__};\n"
                 f"SELECT * FROM `{cls.table_name()}` WHERE {cls.primary_key} = $key;"), params
+
+    @classmethod
+    def select_key(cls, **kwargs):
+        params = {}
+        condition = []
+        declare = ''
+        for key, value in kwargs.items():
+            if key not in cls.model_fields:
+                raise KeyError("Такого поля в таблице нет")
+            params[f"${key}"] = ydb.TypedValue(value, DATATYPE.get(type(value)))
+            condition.append(f"{key} = ${key}")
+            declare += f"DECLARE ${key} AS {DATA.get(type(value), JsonDocument).__name__};\n"
+        return (f"{declare}\nSELECT * FROM `{cls.table_name()}` WHERE {' AND '.join(condition)};"), params
 
     @classmethod
     def delete_id(cls, key):
@@ -321,6 +334,15 @@ class DB:
         try:
             rows = await self.execute(*TableCls.select_id(key))
             return TableCls.from_row(rows[0]) if rows else None
+        except Exception as e:
+            logger.error(e)
+
+    async def select_keys(self, TableCls: type, **kwargs):
+        """Модель или None (записи нет либо запрос не удался — ошибка пишется в лог)."""
+        self._check_class(TableCls)
+        try:
+            rows = await self.execute(*TableCls.select_key(**kwargs))
+            return [TableCls.from_row(row) for row in rows]
         except Exception as e:
             logger.error(e)
 

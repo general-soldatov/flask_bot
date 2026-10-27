@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import requests
 import aiohttp
 
 from app.config.dictionary import reference

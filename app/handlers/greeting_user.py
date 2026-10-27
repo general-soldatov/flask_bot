@@ -47,9 +47,24 @@ async def call_profile(event: MessageEventObject, state: FSMContext, db: ManageV
     action = event.payload_model.action
     if action == 'subject':
         await event.edit_message(lexicon.users['choice_subject'], keyboard=key.get_subject(True).as_markup())
-    elif action == 'register':
-        await state.set_state(Register.name)      
-        await state.set_data({'message_id': event.message_id, 'cmid': event.conversation_message_id})
+    elif action == 'register':  
+        await event.edit_message(lexicon.users['type_learn'], keyboard=key.type_learn().as_markup())
+    elif action == "faculty":
+        info = await db.get_info(event.user_id)
+        await event.edit_message(lexicon.users['faculty'], 
+                                keyboard=key.faculty(reference.distant[info.subject], info.subject).as_markup())
+    elif action == "group":
+        payload = event.payload_model.data
+        await event.edit_message(lexicon.users['group'], 
+                                 keyboard=key.groups(
+                                     reference.distant[payload.get('subject')], payload.get('profile')).as_markup())
+    elif action == "name":   
+        await state.set_state(Register.name) 
+        group = event.payload_model.data
+        if not group:
+            group = {}
+        await state.set_data({'message_id': event.message_id, 
+                              'cmid': event.conversation_message_id, 'data': json.dumps(group)})
         await event.edit_message(lexicon.users['register'], keyboard=key.stop.as_markup())
     else:
         url = None
@@ -80,9 +95,19 @@ async def register(message: Message, state: FSMContext, bot: Bot, db: ManageVK):
         logger.error(f'Register error: {e}')
     # bot.vk.messages.delete(peer_id=message.peer_id, cmids=[data['cmid']], message_ids=data['message_id'], delete_for_all=True)
     info_db = await db.get_user_by_id(message.from_id)
-    data = await Contingent.get(message.text, info_db.subject)
-    if data:
-        info = data.model_dump()
+    user = json.loads(data['data'])
+    if user.get('group'):
+        await message.answer(
+                    lexicon.users['correct'].format(name=message.text, group=user['group'], 
+                                                    subject=info_db.subject, profile=user['profile']),
+                    keyboard=key.get_agree('register').as_markup())
+        user['name'] = message.text
+        user['form_study'] = 1
+        await state.update_data(data=json.dumps(user))
+        return
+    data_sub = await Contingent.get(message.text, info_db.subject)
+    if data_sub:
+        info = data_sub.model_dump()
         await state.update_data(data=json.dumps(info))
         await message.answer(
             lexicon.users['correct'].format(**info),
@@ -94,13 +119,13 @@ async def register(message: Message, state: FSMContext, bot: Bot, db: ManageVK):
 async def question_check(event: MessageEventObject, state: FSMContext, db: ManageVK, bot: Bot):
     agree = event.payload_model.action
     dt = await state.get_data()
-    data = json.loads(dt.get('data'))
-    await state.clear_state()
     if agree == 'yes':
         try:
+            data = json.loads(dt.get('data'))
+            await state.clear_state()
             info = await db.get_user_by_id(event.user_id)
             student = Students(id=event.user_id, subject=info.subject, 
-                               group_id=data['group'], full_name=data['name'], profile=data['profile'])
+                               group_id=data['group'], full_name=data['name'], **data)
             await db.insert(student)
             await bot.send_message(peer_id=ADMIN, message=lexicon.users['success_to_admin'].format(**data,
                                                                                          user_id=event.user_id,

@@ -10,8 +10,10 @@ from fastapi.staticfiles import StaticFiles
 env_path = Path(__file__).parent / '.env'
 load_dotenv(dotenv_path=env_path)
 
-from app.ydb_connect import ManageVK
+# from app.ydb_connect import ManageVK
 from app.index import dp, db
+
+from site_app.vk_handler import get_data
 
 app = FastAPI()
 
@@ -22,6 +24,14 @@ static = Jinja2Templates(directory='static')
 
 PROCESSED_EVENTS = []
 MAX_CACHE_SIZE = 100
+
+information = {
+    'denied': 'Permission denied',
+    'style': [
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css',
+        '/static/style_tel.css'
+    ]
+    }
 
 @app.post('/vk-bot/webhook')
 async def handle_post(request: Request): # Убрали async
@@ -54,6 +64,14 @@ async def handle_post(request: Request): # Убрали async
         print(f"Ошибка в вебхуке: {e}") 
         return PlainTextResponse(content=str(e), status_code=500)
 
+@app.get("/vk_bot/bot={name}")
+async def vk_bot(request: Request, name: str):
+    name = int(name)
+    student = await get_data(name)
+    return templates.TemplateResponse(request, 'students.html',
+                                      context={'request': request,
+                                               'student': student,
+                                               'information': information})
 
 @app.get('/', response_class=HTMLResponse)
 async def hello_index(request: Request, name: str = None):

@@ -1,9 +1,12 @@
 from typing import Optional
 import json
 
-from vkBot.types import CallbackPayload
-from vkBot.keyboard.action import Text, OpenLink, Callback
-from vkBot.keyboard.button import ReplyKeyboard, InlineKeyboard, ButtonColor
+from aiovkBot.types import CallbackPayload
+from aiovkBot.keyboard.action import Text, OpenLink, Callback
+from aiovkBot.keyboard.button import ReplyKeyboard, InlineKeyboard, ButtonColor
+# from vkBot.types import CallbackPayload
+# from vkBot.keyboard.action import Text, OpenLink, Callback
+# from vkBot.keyboard.button import ReplyKeyboard, InlineKeyboard, ButtonColor
 from app.config.dictionary import reference, library_button, lexicon
 from app.config.config import service
 
@@ -25,7 +28,7 @@ def get_subject(profile: bool = False):
         direct.add(Callback(label=lexicon.subject[key], payload=CallbackPayload(source='subject', action=key).model_dump_json()))
     if profile:
         direct.row()
-        direct.add(Callback(label=lexicon.buttons['back'], payload=CallbackPayload(action='profile').model_dump_json()))
+        direct.add(Callback(label=lexicon.buttons['back'], payload=CallbackPayload(source = 'profile', action='profile').model_dump_json()))
     return direct
 
 def get_book(subject: str):
@@ -39,6 +42,40 @@ def get_book(subject: str):
     if subject == 'phys':
         books.add(Callback(label=lexicon.buttons['colab'], payload=CallbackPayload(source='colab', action='').model_dump_json()))
     return books
+
+def type_learn():
+    learn = InlineKeyboard()
+    learn.add(Callback(label=lexicon.buttons['offline'], payload=CallbackPayload(source='profile', action='name').model_dump_json()))
+    learn.row()
+    learn.add(Callback(label=lexicon.buttons['online'], payload=CallbackPayload(source='profile', action='faculty').model_dump_json()))
+    learn.row()
+    learn.add(Callback(label=lexicon.buttons['back'], payload=CallbackPayload(source='profile', action='').model_dump_json()))
+    return learn
+
+def faculty(lst: list, subject: str):
+    group = InlineKeyboard()
+    for item in lst:
+        group.row()
+        group.add(Callback(label=item, 
+                                   payload=CallbackPayload(
+                                       source='profile', action='group', 
+                                       data={'profile': item, 'subject': subject}).model_dump_json()))
+    group.row()
+    group.add(Callback(label=lexicon.buttons['back'], payload=CallbackPayload(source='profile', action='register').model_dump_json()))
+    return group
+
+def groups(lst: dict, faculty: str):
+    group = InlineKeyboard()
+    for i, item in enumerate(lst.get(faculty)):
+        if not i % 3:
+            group.row()
+        group.add(Callback(label=item, 
+                           payload=CallbackPayload(
+                               source='profile', action='name', 
+                               data={'group': item, 'profile': faculty}).model_dump_json()))
+    group.row()
+    group.add(Callback(label=lexicon.buttons['back'], payload=CallbackPayload(source='profile', action='faculty').model_dump_json()))
+    return group
 
 def get_temp_colab(subject):
     books = InlineKeyboard()

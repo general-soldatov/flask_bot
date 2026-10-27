@@ -1,0 +1,37 @@
+{
+    "10": {
+        "name": "Бараш",
+        "quote": "Я личность! Понятно? Бесформенная, но личность!",
+        "image": "https://storage.yandexcloud.net/termex-bot/telegram-bot/ranger/range_1.JPG"
+    },
+    "20": {
+        "name": "Капитан Смоллетт",
+        "quote": "Я такой же осёл как и вы, сэр!",
+        "image": "https://storage.yandexcloud.net/termex-bot/telegram-bot/ranger/range_2.JPG"
+    },
+    "30": {
+        "name": "Кеша",
+        "quote": "Я смогу! Я докажу! Я покажу!... Обо мне узнают. Обо мне заговорят !...",
+        "image": "https://storage.yandexcloud.net/termex-bot/telegram-bot/ranger/range_3.JPG"
+    },
+    "50": {
+        "name": "Нюша",
+        "quote": "Вот так всегда: для кого-то балласт, а для кого-то сокровище.",
+        "image": "https://storage.yandexcloud.net/termex-bot/telegram-bot/ranger/range_4.JPG"
+    },
+    "70": {
+        "name": "Инокентий",
+        "quote": "Эх вы! Жизни не нюхали?! А я цельное лето, цельное лето: утром покос, вечером надои, то корова опоросится, то куры понеслись... \nА тут вишня взошла! Свекла заколосилась!...\nПашешь, как трактор... А ежели дождь во время усушки, а?",
+        "image": "https://storage.yandexcloud.net/termex-bot/telegram-bot/ranger/range_5.JPG"
+    },
+    "90": {
+        "name": "Карыч",
+        "quote": "А вдруг окажется, что смысл жизни - не есть сладкого и не спать до двенадцати?\nЯ тогда только расстроюсь...",
+        "image": "https://storage.yandexcloud.net/termex-bot/telegram-bot/ranger/range_6.JPG"
+    },
+    "110": {
+        "name": "Лосяш",
+        "quote": "Феноменально!",
+        "image": "https://storage.yandexcloud.net/termex-bot/telegram-bot/ranger/range_7.JPG"
+    }
+}
