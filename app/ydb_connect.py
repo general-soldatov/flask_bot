@@ -605,7 +605,7 @@ class ManageVK(DB):
 
     async def update_score_stepik(self, user_id: int, score: int):
         # раньше здесь было Stepik.__name__ (с заглавной) — такой таблицы нет, запрос падал
-        return await self._set_column(Stepik, 'score', user_id, score)
+        return await self._set_column(Stepik, 'score', user_id, int(score))
 
     async def get_score_stepik(self, user_id: int):
         try:

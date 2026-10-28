@@ -1,11 +1,12 @@
 import json
 import time
-from .functool import study_score
+from .functool import Scores
 from boto_orm.s3_manager import S3Manager
 
 from app.config.config import s3_config, session
 from app.ydb_connect import ManageVK, Students
 
+SCORES = "https://storage.yandexcloud.net/termex-bot/scores.json"
 
 def get_rate(profile: str, bucket_name: str):
     s3 = S3Manager(bucket_name, s3_config, session)
@@ -19,6 +20,7 @@ async def maker(users: list, subject: str, stepik: list):
     profile_list = []
     message = []
     s3 = S3Manager(f'{subject}-bot', s3_config, session)
+    scores = await Scores.model_construct(SCORES)
     try:
         for item in users:
             step = None
@@ -30,7 +32,7 @@ async def maker(users: list, subject: str, stepik: list):
             study = {
                 "name": item.full_name,
                 "profile": item.profile,
-                "score": study_score(item, step)
+                "score": scores.get_mark(item, step)["rate"]
             }
             study_list.append(study)
 

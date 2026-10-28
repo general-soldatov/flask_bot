@@ -6,6 +6,8 @@ class Contingent(BaseModel):
     name: str
     profile: str
     group: str
+    var: str | None = None
+    varD: str | None = None
 
     @classmethod
     async def get(cls, name: str, subject: str):

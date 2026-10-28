@@ -4,7 +4,7 @@
 from aiovkBot import Router, MessageEventObject, Message, Bot, F
 
 from app.features.user_api import Contingent
-from app.config.config import ADMIN
+from app.config.config import ADMIN, WEB
 from app.filters import SourcePayload, Mailer
 from app.config.dictionary import lexicon, reference
 import app.keyboards as key
@@ -39,7 +39,7 @@ async def set_percent(event: MessageEventObject, db: ManageVK, bot: Bot):
 async def set_rate(message: Message):
     await message.answer('Please, wait...')
     try:
-        response = await Contingent.get_query('https://d5dvtf5ioi8q69ckjelk.apigw.yandexcloud.net/vk_bot/rate')
+        response = await Contingent.get_query(f'{WEB}vk_bot/rate')
         if response:
             time_data = float(response[0]['time']) + float(response[1]['time'])
             await message.answer(lexicon.admin['rate'].format(termex=response[0]['message'],

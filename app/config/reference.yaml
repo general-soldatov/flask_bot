@@ -27,7 +27,7 @@ schedule:
   weekday: ['', "ПОНЕДЕЛЬНИК", "ВТОРНИК", "СРЕДА", "ЧЕТВЕРГ", "ПЯТНИЦА", "СУББОТА", "ВОСКРЕСЕНЬЕ"]
   selector: ['today', 'tomorrow', 'after_tom', 'to_2_day']
   source: https://storage.yandexcloud.net/termex-bot/json/schedule.json
-  profile: https://d5dvtf5ioi8q69ckjelk.apigw.yandexcloud.net/vk_bot/bot={tg_id}
+  profile: "{web}vk_bot/bot={tg_id}"
 contacts:
   vk: 'https://vk.com/general_soldatov'
   tg: 'https://t.me/general_soldatov'

@@ -5,7 +5,7 @@ from aiovkBot.filters import StateFilter
 
 
 from app.filters import SourcePayload, Button
-from app.config.config import ADMIN
+from app.config.config import ADMIN, WEB
 from app.config.dictionary import lexicon, reference
 from app.features.user_api import Contingent
 # from app.database import ManageVK, Users, Students
@@ -31,7 +31,7 @@ async def cmd_profile(message: Message, db: ManageVK):
         if isinstance(info, Students):
             data = dict(name = info.full_name,
                         subject=lexicon.subject[info.subject])
-            url = reference.schedule.profile.format(subject=info.subject, tg_id=message.from_id)
+            url = reference.schedule.profile.format(subject=info.subject, tg_id=message.from_id, web=WEB)
         else:
             data = dict(name = f"{info.first_name} {info.last_name}",
                         subject=lexicon.subject[info.subject])
@@ -73,7 +73,7 @@ async def call_profile(event: MessageEventObject, state: FSMContext, db: ManageV
             if isinstance(info, Students):
                 data = dict(name = info.full_name,
                             subject=lexicon.subject[info.subject])
-                url = reference.schedule.profile.format(subject=info.subject, tg_id=event.user_id)
+                url = reference.schedule.profile.format(subject=info.subject, tg_id=event.user_id, web=WEB)
             else:
                 data = dict(name = f"{info.first_name} {info.last_name}",
                             subject=lexicon.subject[info.subject])

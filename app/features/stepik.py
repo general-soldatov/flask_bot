@@ -14,17 +14,19 @@ def get_step_id(data: str):
 class StepikParser:
     def __init__(self, config: Dict[str, str]):
         self.config = config
-        # self.token = self._get_token(**config)
+        # self.token = await self._get_token(**config)
         self.base_url = "https://stepik.org/api"
         self.headers = {}
+
     
     async def get_token(self):
-        auth = aiohttp.BasicAuth(**self.config)
         async with aiohttp.ClientSession() as session:
-            async with session.post('https://stepik.org/oauth2/token/',
-                            data={'grant_type': 'client_credentials'}, auth=auth) as response:
-                data = await response.json(content_type=None)
-                self.token = data.get('access_token')
+            # 1. Получение access_token через client_id и client_secret
+            payload = {"grant_type": "client_credentials", **self.config}
+
+            async with session.post('https://stepik.org/oauth2/token/', data=payload) as token_resp:
+                token_data = await token_resp.json()
+                self.token = token_data.get("access_token")
                 self.headers = {
                         'Authorization': f'Bearer {self.token}'
                 }
@@ -49,7 +51,7 @@ class StepikParser:
             url = f"{self.base_url}/course-grades?course={course_id}&page={page}"
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, headers=self.headers, timeout=30) as response:
-                    await response.raise_for_status()
+                    response.raise_for_status()
                     data = await response.json(content_type=None)
 
             # Парсим данные о студентах на текущей странице

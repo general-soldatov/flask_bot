@@ -64,7 +64,7 @@ async def cmd_keyboard(message: Message, db: ManageVK):
     if info:
         await message.answer(lexicon.users['menu'], keyboard=key.start_pack(info.subject, is_register).as_markup())
     else:
-        await message.answer()
+        await message.answer(lexicon.users['error'])
 
 @dp.message(Button('books'))
 async def cmd_keyboard(message: Message, db: ManageVK):

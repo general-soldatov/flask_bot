@@ -11,6 +11,7 @@ ADMIN = os.getenv('ADMIN')
 PHYS = os.getenv('PHYS')
 TERMEX = os.getenv('TERMEX')
 DIR = os.getenv('DIR')
+WEB = os.getenv('WEB')
 
 
 class YamlProject(BaseModel):
