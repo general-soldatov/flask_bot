@@ -34,12 +34,15 @@ async def get_profile(data: Students, step: Stepik) -> Dict[str, Union[str, int,
             rate_list = RATE_ADMIN
         elif data.profile in scores.students[data.subject]:
             rate_list = [get_rate(data.profile, f'{data.subject}-bot')]
+    step_score = 0
+    if step:
+        step_score = step.score
     return {
         "name": data.full_name,
         "range": rater['name'],
         "quote": rater['quote'],
         "img": rater['image'],
-        "stepik": step.score,
+        "stepik": step_score,
         **mark,
         "info": {
             'Профиль': data.profile,
