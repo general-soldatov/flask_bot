@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+
+{% for item in information.style %}
+    <link rel="stylesheet" href="{{ item }}">
+{% endfor %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Мой профиль</title>
+</head>
+ <body>
+{% if student %}
+  <h2>{{ student.name }}</h2>
+  <table class="var-table">
+    <tr class="rang">
+      <td><img class="rang" src="{{ student.img }}"  </td>
+      <td class="ranger"><p class='rang_name'>Ваш ранг</p>
+        <p>{{ student.range }}</p>
+      </td>
+    </tr>
+    </table>
+    <h2>"{{ student.quote.replace('\n', '<br>')|safe }}"</h2>
+     <p>Балл рейтинга:</p>
+    <div class="animated-progress progress-blue">
+        <span data-progress="{{ student.rate }}"></span>
+      </div>
+
+   <p>Мой рейтинг:</p>
+<p>
+{% for row in range(student.star) %}
+     <div class="star" id="active"> </div>
+{% endfor %}
+{% for row in range(5-student.star) %}
+     <div class="star"> </div>
+{% endfor %}
+
+</p>
+
+  <p>Информация</p>
+<table class="info-table">
+    {% for key, value in student.info.items() %}
+        <tr><td class="sed">{{ key }}</td><td>{{ value }}</td></tr>
+    {% endfor %}
+      <tr><td class="sed">Stepik</td><td>{{ student.stepik }}</td></tr>
+</table>
+<p>Сданы задачи</p>
+<table class="info-table">
+  <tr><td class="sed">Задача</td><td>Балл</td></tr>
+    {% for key, value in student.tasks.items() %}
+    {% if value %}
+        <tr><td class="sed">{{ key }}</td><td>{{ value }}</td></tr>
+    {% endif %}
+    {% endfor %}
+</table>
+{% for rating in student.rate_list %}
+<p>Рейтинг "{{ rating[0].profile }}"</p>
+<table class="info-table">
+  <tr><td class="sed">Место</td><td class="sed">ФИО</td><td class="sed">Балл</td></tr>
+    {% for item in rating %}
+    <tr><td>{{ item.rate }}</td><td>{{ item.name }}</td><td>{{ item.score }}</td></tr>
+    {% endfor %}
+</table>
+{% endfor %}
+{% else %}
+  <h1>{{ information.denied }}</h1>
+{% endif %}
+
+
+
+<script>
+    $(".animated-progress span").each(function () {
+  $(this).animate(
+    {
+      width: $(this).attr("data-progress")*100/150 + "%",
+    },
+    1000
+  );
+  $(this).text($(this).attr("data-progress"));
+});
+</script>
+
+  </body>

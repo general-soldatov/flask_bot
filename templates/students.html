@@ -1,86 +1,297 @@
 <!doctype html>
 <html lang="ru">
-
-{% for item in information.style %}
-    <link rel="stylesheet" href="{{ item }}">
-{% endfor %}
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Мой профиль</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0f0b1c">
+  <title>Мой профиль</title>
+  {% for item in information.style %}
+  <link rel="stylesheet" href="{{ item }}">
+  {% endfor %}
 </head>
- <body>
+<body>
+<main class="app">
 {% if student %}
-  <h2>{{ student.name }}</h2>
-  <table class="var-table">
-    <tr class="rang">
-      <td><img class="rang" src="{{ student.img }}"  </td>
-      <td class="ranger"><p class='rang_name'>Ваш ранг</p>
-        <p>{{ student.range }}</p>
-      </td>
-    </tr>
-    </table>
-    <h2>"{{ student.quote.replace('\n', '<br>')|safe }}"</h2>
-     <p>Балл рейтинга:</p>
-    <div class="animated-progress progress-blue">
-        <span data-progress="{{ student.rate }}"></span>
-      </div>
 
-   <p>Мой рейтинг:</p>
-<p>
-{% for row in range(student.star) %}
-     <div class="star" id="active"> </div>
-{% endfor %}
-{% for row in range(5-student.star) %}
-     <div class="star"> </div>
-{% endfor %}
-
-</p>
-
-  <p>Информация</p>
-<table class="info-table">
-    {% for key, value in student.info.items() %}
-        <tr><td class="sed">{{ key }}</td><td>{{ value }}</td></tr>
-    {% endfor %}
-      <tr><td class="sed">Stepik</td><td>{{ student.stepik }}</td></tr>
-</table>
-<p>Сданы задачи</p>
-<table class="info-table">
-  <tr><td class="sed">Задача</td><td>Балл</td></tr>
-    {% for key, value in student.tasks.items() %}
-    {% if value %}
-        <tr><td class="sed">{{ key }}</td><td>{{ value }}</td></tr>
+  <header class="profile">
+    {% if student.img %}
+    <img class="rank-img" src="{{ student.img }}" alt="" onerror="this.remove()">
     {% endif %}
+    <div>
+      <h1>{{ student.name }}</h1>
+      <span class="rank-name">{{ student.range }}</span>
+    </div>
+  </header>
+
+  <section class="score-card" aria-label="Рейтинг">
+    <div class="score-ring" id="ring" data-score="{{ student.rate }}" data-max="150"
+         role="img" aria-label="Балл рейтинга: {{ student.rate }} из 150">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <defs>
+          <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#c58bff"/>
+            <stop offset="1" stop-color="#9105f5"/>
+          </linearGradient>
+        </defs>
+        <circle class="ring-track" cx="60" cy="60" r="54"/>
+        <circle class="ring-bar" cx="60" cy="60" r="54"/>
+      </svg>
+      <div class="ring-center">
+        <span class="ring-value" id="ringValue">0</span>
+        <span class="ring-max">из 150</span>
+      </div>
+    </div>
+    <p class="score-caption" id="scoreCaption">Балл рейтинга</p>
+
+    <div class="stars-row">
+      <span>Мой рейтинг</span>
+      <div class="stars" id="stars" data-stars="{{ student.star }}">
+        {% for i in range(5) %}
+        <button class="star" type="button" aria-label="Звезда {{ i + 1 }}"></button>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {% if student.quote %}
+  <blockquote class="quote">{{ student.quote }}</blockquote>
+  {% endif %}
+
+  <div class="tabbar-wrap">
+    <div class="tabbar" role="tablist" aria-label="Разделы профиля">
+      <span class="tab-indicator" id="indicator"></span>
+      <button class="tab" role="tab" id="tab-info" aria-controls="panel-info" aria-selected="true">Обзор</button>
+      <button class="tab" role="tab" id="tab-tasks" aria-controls="panel-tasks" aria-selected="false" tabindex="-1">Задачи</button>
+      <button class="tab" role="tab" id="tab-rating" aria-controls="panel-rating" aria-selected="false" tabindex="-1">Рейтинг</button>
+    </div>
+  </div>
+
+  <!-- Обзор -->
+  <section class="panel" id="panel-info" role="tabpanel" aria-labelledby="tab-info">
+    <dl class="info-list">
+      {% for key, value in student.info.items() %}
+      <div class="info-row"><dt>{{ key }}</dt><dd>{{ value }}</dd></div>
+      {% endfor %}
+      <div class="info-row"><dt>Stepik</dt><dd>{{ student.stepik }}</dd></div>
+    </dl>
+  </section>
+
+  <!-- Задачи -->
+  <section class="panel" id="panel-tasks" role="tabpanel" aria-labelledby="tab-tasks" hidden>
+    <div class="stats">
+      <div class="stat"><b id="taskCount">0</b><span>Сдано задач</span></div>
+      <div class="stat"><b id="taskSum">0</b><span>Сумма баллов</span></div>
+    </div>
+    <input class="search" id="taskSearch" type="search" placeholder="Найти задачу" aria-label="Найти задачу" autocomplete="off">
+    <ul class="task-list" id="taskList">
+      {% for key, value in student.tasks.items() %}
+      {% if value %}
+      <li class="task" data-value="{{ value }}">
+        <div class="task-head"><span>{{ key }}</span><span>{{ value }}</span></div>
+        <div class="bar"><i></i></div>
+      </li>
+      {% endif %}
+      {% endfor %}
+    </ul>
+    <p class="empty" id="taskEmpty" hidden>Ничего не найдено</p>
+  </section>
+
+  <!-- Рейтинг -->
+  <section class="panel" id="panel-rating" role="tabpanel" aria-labelledby="tab-rating" hidden>
+    {% for rating in student.rate_list %}
+    {% if rating %}
+    <details class="board"{% if loop.first %} open{% endif %}>
+      <summary>
+        <span>Рейтинг «{{ rating[0].profile }}»</span>
+        <span class="my-place" hidden></span>
+      </summary>
+      <div class="rows">
+        {% for item in rating %}
+        <div class="row{% if item.name == student.name %} me{% endif %}">
+          <span class="place" data-place="{{ item.rate }}">{{ item.rate }}</span>
+          <span class="name">{{ item.name }}</span>
+          <span class="pts">{{ item.score }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </details>
+    {% endif %}
+    {% else %}
+    <p class="empty">Рейтинг пока не сформирован</p>
     {% endfor %}
-</table>
-{% for rating in student.rate_list %}
-<p>Рейтинг "{{ rating[0].profile }}"</p>
-<table class="info-table">
-  <tr><td class="sed">Место</td><td class="sed">ФИО</td><td class="sed">Балл</td></tr>
-    {% for item in rating %}
-    <tr><td>{{ item.rate }}</td><td>{{ item.name }}</td><td>{{ item.score }}</td></tr>
-    {% endfor %}
-</table>
-{% endfor %}
+  </section>
+
 {% else %}
-  <h1>{{ information.denied }}</h1>
+  <h1 class="denied">{{ information.denied }}</h1>
 {% endif %}
+</main>
 
-
-
+{% if student %}
 <script>
-    $(".animated-progress span").each(function () {
-  $(this).animate(
-    {
-      width: $(this).attr("data-progress")*100/150 + "%",
-    },
-    1000
-  );
-  $(this).text($(this).attr("data-progress"));
-});
-</script>
+(function () {
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
-  </body>
+  // Telegram Mini App: подстройка окна, если страница открыта внутри Telegram
+  try {
+    var tg = window.Telegram && window.Telegram.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+  } catch (e) {}
+
+  function countUp(el, to, ms, decimals) {
+    if (reduce || !to) { el.textContent = fmt(to, decimals); return; }
+    var start = null;
+    function step(t) {
+      if (start === null) start = t;
+      var p = Math.min((t - start) / ms, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(to * eased, decimals);
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function fmt(n, decimals) {
+    return decimals ? n.toFixed(decimals).replace(/\.0+$/, "") : String(Math.round(n));
+  }
+
+  /* ---------- Кольцо рейтинга ---------- */
+  var ring = $("#ring");
+  var score = parseFloat(ring.dataset.score) || 0;
+  var max = parseFloat(ring.dataset.max) || 150;
+  var pct = Math.max(0, Math.min(score / max, 1));
+  var bar = $(".ring-bar", ring);
+  var C = 2 * Math.PI * 54;
+  bar.style.strokeDasharray = C;
+  bar.style.strokeDashoffset = C;
+
+  var caption = $("#scoreCaption");
+  caption.innerHTML = "Балл рейтинга: <b>" + Math.round(pct * 100) + "%</b> от максимума";
+
+  /* ---------- Звёзды ---------- */
+  var starsBox = $("#stars");
+  var starCount = parseInt(starsBox.dataset.stars, 10) || 0;
+  var stars = $$(".star", starsBox);
+
+  // Единый сценарий появления: кольцо, число, затем звёзды
+  requestAnimationFrame(function () {
+    bar.style.strokeDashoffset = C * (1 - pct);
+    countUp($("#ringValue"), score, 1400, score % 1 ? 1 : 0);
+    stars.forEach(function (s, i) {
+      if (i < starCount) setTimeout(function () { s.classList.add("on"); }, reduce ? 0 : 900 + i * 140);
+    });
+  });
+
+  // Нажатие на звезду: короткая анимация
+  stars.forEach(function (s) {
+    s.addEventListener("click", function () {
+      s.classList.add("pop");
+      setTimeout(function () { s.classList.remove("pop"); }, 250);
+    });
+  });
+
+  /* ---------- Вкладки ---------- */
+  var tabs = $$("[role=tab]");
+  var indicator = $("#indicator");
+
+  function moveIndicator(tab) {
+    indicator.style.width = tab.offsetWidth + "px";
+    indicator.style.transform = "translateX(" + tab.offsetLeft + "px)";
+  }
+
+  function select(tab) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      var panel = document.getElementById(t.getAttribute("aria-controls"));
+      t.setAttribute("aria-selected", on);
+      t.tabIndex = on ? 0 : -1;
+      panel.hidden = !on;
+      panel.classList.remove("enter", "in");
+      if (on) {
+        void panel.offsetWidth;
+        panel.classList.add("enter");
+        requestAnimationFrame(function () { panel.classList.add("in"); });
+      }
+    });
+    moveIndicator(tab);
+  }
+
+  tabs.forEach(function (t, i) {
+    t.addEventListener("click", function () { select(t); });
+    t.addEventListener("keydown", function (e) {
+      var dir = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (!dir) return;
+      var next = tabs[(i + dir + tabs.length) % tabs.length];
+      next.focus();
+      select(next);
+    });
+  });
+  select(tabs[0]);
+  window.addEventListener("resize", function () {
+    moveIndicator(tabs.filter(function (t) { return t.getAttribute("aria-selected") === "true"; })[0]);
+  });
+
+  /* ---------- Задачи ---------- */
+  var tasks = $$(".task");
+  var values = tasks.map(function (t) { return parseFloat(String(t.dataset.value).replace(",", ".")) || 0; });
+  var topValue = Math.max.apply(null, values.concat([1]));
+  var sum = values.reduce(function (a, b) { return a + b; }, 0);
+
+  tasks.forEach(function (t, i) {
+    $(".bar i", t).style.setProperty("--w", Math.round(values[i] / topValue * 100) + "%");
+  });
+  $("#taskCount").textContent = tasks.length;
+  $("#taskSum").textContent = fmt(sum, 1);
+  if (!tasks.length) {
+    $("#taskEmpty").textContent = "Пока нет сданных задач";
+    $("#taskEmpty").hidden = false;
+    $("#taskSearch").hidden = true;
+  }
+
+  $("#taskSearch").addEventListener("input", function (e) {
+    var q = e.target.value.trim().toLowerCase();
+    var shown = 0;
+    tasks.forEach(function (t) {
+      var ok = t.textContent.toLowerCase().indexOf(q) !== -1;
+      t.hidden = !ok;
+      if (ok) shown++;
+    });
+    $("#taskEmpty").textContent = "Ничего не найдено";
+    $("#taskEmpty").hidden = shown > 0;
+  });
+
+  /* ---------- Рейтинги ---------- */
+  var LIMIT = 8;
+  $$(".board").forEach(function (board) {
+    var rows = $$(".row", board);
+
+    var mine = rows.filter(function (r) { return r.classList.contains("me"); })[0];
+    if (mine) {
+      var badge = $(".my-place", board);
+      badge.textContent = "Вы: " + $(".place", mine).textContent + " место";
+      badge.hidden = false;
+    }
+
+    if (rows.length <= LIMIT) return;
+    var expanded = false;
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "more";
+
+    function apply() {
+      rows.forEach(function (r, i) {
+        r.hidden = !expanded && i >= LIMIT && !r.classList.contains("me");
+      });
+      btn.textContent = expanded ? "Свернуть" : "Показать всех (" + rows.length + ")";
+    }
+    btn.addEventListener("click", function () { expanded = !expanded; apply(); });
+    board.appendChild(btn);
+    apply();
+  });
+})();
+</script>
+{% endif %}
+</body>
+</html>

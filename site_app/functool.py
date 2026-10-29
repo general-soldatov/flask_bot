@@ -49,7 +49,7 @@ class Scores(BaseModel):
 
 
 async def get_range(score: float | int):
-    url = 'https://storage.yandexcloud.net/termex-bot/telegram-bot/static/ranger.json'
+    url = 'https://storage.yandexcloud.net/termex-bot/telegram-bot/static/range.json'
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             page: dict = await response.json(content_type=None)
