@@ -123,7 +123,7 @@ async def load_payload() -> dict:
     # students = [{'id': 1, 'full_name': "Алексеев Иван", "type_learn": "online",  "subject": "phys", 'group_id': "ИВТ-21", 'profile': "Разработка ПО", "bonus": {0: 5}}]
     students = []
     scores = await Scores.model_construct(SCORES)
-    tasks = [{'id': 0, 'title': 'Пропуск лекций', 'max_score': 15}, {'id': 1, 'title': 'Штрафы', 'max_score': 20}, {'id': 2, 'title': 'Бонусы', 'max_score': 0}]
+    tasks = [{'id': 0, 'title': 'Пропуск лекций', 'max_score': 15}, {'id': 1, 'title': 'Штрафы', 'max_score': 20}, {'id': 2, 'title': 'Бонусы', 'max_score': 30}]
     return {"students": students, "tasks": tasks, 
             "scores": scores.model_dump()}
 
