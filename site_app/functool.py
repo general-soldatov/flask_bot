@@ -2,15 +2,39 @@ import aiohttp
 from app.ydb_connect import Stepik, Students
 from pydantic import BaseModel
 from typing import Dict, List
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def fib(n):
+    if n < 2:
+        return n
+    return fib(n - 1) + fib(n - 2)
+
+@lru_cache(maxsize=None)
+def sum_fib(n):
+    if n == 0:
+        return fib(0)
+    return fib(n) + sum_fib(n - 1)
+
+def separate_bonus(key, value):
+    if key == 0:
+        return - sum_fib(value)
+    if key == 1:
+        return - value
+    return value
 
 def sum_task(data: dict) -> float:
     return sum(map(int, data.values()))
+    
+def _get_bonus(data: dict) -> float:
+    return sum((separate_bonus(key, int(value)) for key, value in data.items()))
 
 class Scores(BaseModel):
     students: Dict[str, Dict[str, List[int | float]]]
     distant: List[int | float]
     default: List[int | float]
     stepik_coeff: Dict[str, int | float]
+    groups: Dict[str, Dict[str, Dict[str, List[str]]]]
 
     @classmethod
     async def model_construct(cls, url: str):
@@ -24,14 +48,14 @@ class Scores(BaseModel):
         for i in range(5, 0, -1):
             if score > value[i - 1]:
                 return i
-        return 0
+        return 0   
 
     @staticmethod
     def study_score(data: Students, step: Stepik, coeff: dict) -> float:
         score = 0
         if step:
             score = step.score
-        tasks = sum_task(data.tasks) + sum_task(data.bonus)
+        tasks = sum_task(data.tasks) + _get_bonus(data.bonus)
         tasks += coeff[data.subject] * score
         tasks = round(tasks * (1 + data.prize / 100), 1) - int(data.fine)
         return tasks
@@ -104,3 +128,4 @@ async def get_range(score: float | int):
 #     tasks += coeff[data.subject] * score
 #     tasks = round(tasks * (1 + data.prize / 100), 1) - int(data.fine)
 #     return tasks
+

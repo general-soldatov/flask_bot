@@ -575,6 +575,25 @@ class ManageVK(DB):
             return None
         return await self._set_column(Students, 'tasks', user_id, tasks)
 
+    async def get_bonus(self, user_id: int):
+        try:
+            student: Students = await self.select_id(Students, user_id)
+            return {
+                'subject': student.subject,
+                'bonus': student.bonus
+            }
+        except Exception as e:
+            logger.error(e)
+
+    async def add_bonus(self, student_id: int, task_id: str, score: int):
+        try:
+            tasks = (await self.get_bonus(student_id))['bonus']
+            tasks[task_id] = score
+        except Exception as e:
+            logger.error(f'Manage VK error: {e}')
+            return None
+        return await self._set_column(Students, 'bonus', student_id, tasks)
+
     # ------------------------------------------------------------ рассылки
     async def get_mailing_all(self):
         return await self._ids(f"SELECT id FROM `{Users.table_name()}`")

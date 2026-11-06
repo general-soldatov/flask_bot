@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0f0b1c">
+  <title>Вход в админку</title>
+  <link rel="stylesheet" href="/static/style_tel.css">
+  <link rel="stylesheet" href="/static/style_admin.css">
+</head>
+<body>
+<main class="login-wrap">
+  <form class="login-card" method="post" action="/login" id="loginForm">
+    <h1>Вход в админку</h1>
+    <p class="login-sub">Введите логин и пароль преподавателя</p>
+
+    {% if error %}
+    <p class="form-error" role="alert">{{ error }}</p>
+    {% endif %}
+
+    <input type="hidden" name="next" value="{{ next }}">
+
+    <div class="field">
+      <label for="username">Логин</label>
+      <input id="username" name="username" type="text" value="{{ username }}"
+             autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+    </div>
+
+    <div class="field">
+      <label for="password">Пароль</label>
+      <div class="pw">
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button class="pw-toggle" id="pwToggle" type="button" aria-controls="password" aria-pressed="false">Показать</button>
+      </div>
+    </div>
+
+    <label class="check">
+      <input type="checkbox" name="remember" value="1">
+      <span>Запомнить меня на 30 дней</span>
+    </label>
+
+    <button class="btn btn--primary btn--block" id="submitBtn" type="submit">Войти</button>
+  </form>
+</main>
+
+<script>
+(function () {
+  var pw = document.getElementById("password");
+  var toggle = document.getElementById("pwToggle");
+  toggle.addEventListener("click", function () {
+    var show = pw.type === "password";
+    pw.type = show ? "text" : "password";
+    toggle.textContent = show ? "Скрыть" : "Показать";
+    toggle.setAttribute("aria-pressed", show);
+  });
+
+  var form = document.getElementById("loginForm");
+  var btn = document.getElementById("submitBtn");
+  form.addEventListener("submit", function () {
+    btn.disabled = true;
+    btn.textContent = "Входим…";
+  });
+
+  // При ошибке пароля сразу ставим курсор в поле пароля
+  if (document.querySelector(".form-error") && document.getElementById("username").value) {
+    pw.focus();
+  }
+})();
+</script>
+</body>
+</html>

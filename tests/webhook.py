@@ -10,6 +10,7 @@ from app.config.config import WEB, TERMEX, service
 from app.config.dictionary import lexicon
 from app.features.user_api import Contingent
 from app.features.stepik import StepikParser
+from site_app.functool import _get_bonus
 
 # async def main():
 #     db = ManageVK()
@@ -31,7 +32,8 @@ async def main():
     await step.get_token()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # asyncio.run(main())
+    print(_get_bonus({0: 3, 1: 1, 2: 0}))
 # load_dotenv()
 # data = dict(name = f"sast_name",
 #                         subject=lexicon.subject['phys'], web=WEB)

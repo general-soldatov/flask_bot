@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0f0b1c">
+  <title>Оценки студентов</title>
+  <link rel="stylesheet" href="/static/style_tel.css">
+  <link rel="stylesheet" href="/static/style_admin.css">
+</head>
+<body>
+<main class="admin">
+  <header class="admin-head">
+    <h1>Оценки студентов</h1>
+    <p id="summary"></p>
+  </header>
+
+  <section class="toolbar" aria-label="Фильтры">
+    <label class="field">
+      <span>Поиск по ФИО</span>
+      <input id="fSearch" type="search" placeholder="Начните вводить фамилию" autocomplete="off">
+    </label>
+    <label class="field">
+      <span>Форма обучения</span>
+      <select id="fType"><option value="">Все формы</option></select>
+    </label>
+    <label class="field">
+      <span>Предмет</span>
+      <select id="fSubject"><option value="">Все предметы</option></select>
+    </label>
+    <label class="field">
+      <span>Профиль обучения</span>
+      <select id="fProfile"><option value="">Все профили</option></select>
+    </label>
+    <label class="field">
+      <span>Группа</span>
+      <select id="fGroup"><option value="">Все группы</option></select>
+    </label>
+    <label class="field field--task">
+      <span>Задача для оценки</span>
+      <select id="fTask"></select>
+    </label>
+    <button class="btn" id="reset" type="button">Сбросить фильтры</button>
+    <button class="btn btn--primary" id="get" type="button">Вывести список</button>
+  </section>
+
+  <div class="table-wrap">
+    <table class="pivot" id="pivot">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+    <p class="empty" id="empty" hidden>По выбранным фильтрам студентов нет</p>
+  </div>
+</main>
+
+<div class="savebar">
+  <div class="savebar-in">
+    <span class="dirty-info" id="dirtyInfo" aria-live="polite">Нет изменений</span>
+    <button class="btn btn--primary" id="save" type="button" disabled>Сохранить</button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="application/json" id="data">{{ payload|tojson }}</script>
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById("data").textContent);
+  var seens = {subject: {} , group_id: {}, profile: {}, type_learn: {}};
+
+  var optionData = {type_learn: "Все формы", subject: "Все предметы", profile: "Все профили", group_id: "Все группы"}
+
+  var scores = data.scores;
+  var groups = scores.groups;
+  var students = data.students;
+  var tasks = data.tasks;
+  
+  var taskById = {};
+
+  const cache = { 0: 0, 1: 1 };
+
+  function fib(n) {
+      // Если значение уже есть в кэше, сразу возвращаем его
+      if (n in cache) {
+          return cache[n];
+      }
+      // Иначе считаем рекурсивно и сохраняем в кэш
+      cache[n] = fib(n - 1) + fib(n - 2);
+      return cache[n];
+  }
+
+  // Функция для подсчета суммы первых n чисел Фибоначчи
+  function sumFib(n) {
+      if (n === 0) return fib(0);
+      return fib(n) + sumFib(n - 1);
+  }  
+
+  tasks.forEach(function (t) { taskById[t.id] = t; });
+  for (const elem in groups) {
+    seens.type_learn[elem] = true;
+    for (const sub in groups[elem]) {
+      seens.subject[sub] = true;
+    }
+  }
+
+  function get_profile() {
+    if (state.subject != "") {
+      seens.profile = {}
+      for (const elem in groups[state.type_learn][state.subject]) {
+        seens.profile[elem] = true;
+      }
+    } 
+    fillSelect($("#fProfile"), "profile");
+  }
+
+  function get_group() {
+    if (state.subject && state.profile) {
+      for (const elem of groups[state.type_learn][state.subject][state.profile]) {
+        seens.group_id[elem] = true;
+      }
+    } else {
+      seens.group_id = {}
+    }
+    fillSelect($("#fGroup"), "group_id");
+  }
+  
+  var state = {
+    key: "full_name", dir: 1,
+    task: tasks.length ? tasks[0].id : null,
+    group: "", profile: "", q: "", subject: "", type_learn: ""
+  };
+  var edits = {}; // "studentId:taskId" -> строка из поля (только отличающиеся от сохранённых)
+
+  var $ = function (s) { return document.querySelector(s); };
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined && text !== null) e.textContent = text;
+    return e;
+  }
+
+  function separate_bonus(key, value) {
+    if (key == 0) return - sumFib(value);
+    if (key == 1) return - value;
+    return value;
+  }
+
+  /* ---------- Данные ---------- */
+  function keyOf(sid, tid) { return sid + ":" + tid; }
+  function orig(s, tid) { var v = s.bonus[tid]; return v === undefined ? null : v; }
+  function origStr(s, tid) { var v = orig(s, tid); return v === null ? "" : String(v); }
+  function total(s) {
+    var t = 0;
+    t = s.rate;;
+    Object.keys(s.bonus).forEach(function (k) { t += separate_bonus(k, s.bonus[k]); });
+    return t;
+  }
+  function val(s, key) {
+    if (key === "sum") return total(s);
+    if (key.indexOf("t:") === 0) return orig(s, key.slice(2));
+    return s[key];
+  }
+  function parseRaw(raw, tid) {
+    raw = raw.trim();
+    if (raw === "") return { ok: true, value: null };
+    if (!/^\d+$/.test(raw)) return { ok: false };
+    var n = parseInt(raw, 10);
+    if (n > taskById[tid].max_score) return { ok: false };
+    return { ok: true, value: n };
+  }
+
+  /* ---------- Фильтры и сортировка ---------- */
+  function byName(a, b) { return a.full_name.localeCompare(b.full_name, "ru"); }
+
+  function compare(a, b) {
+    var va = val(a, state.key), vb = val(b, state.key);
+    var an = va === null || va === undefined, bn = vb === null || vb === undefined;
+    if (an || bn) return an && bn ? byName(a, b) : (an ? 1 : -1); // пустые всегда внизу
+    var r = typeof va === "number"
+      ? va - vb
+      : String(va).localeCompare(String(vb), "ru", { numeric: true, sensitivity: "base" });
+    return r === 0 ? byName(a, b) : r * state.dir;
+  }
+
+  function visible() {
+    var q = state.q.toLowerCase();
+    return students.filter(function (s) {
+      return (!state.group || s.group_id === state.group) &&
+             (!state.profile || s.profile === state.profile) &&
+             (!state.subject || s.subject === state.subject) &&
+             (!q || s.full_name.toLowerCase().indexOf(q) !== -1);
+    }).sort(compare);
+  }
+
+  function fillSelect(sel, field) {
+    sel.innerHTML = `<option value="">${optionData[field]}</option>`;
+    Object.keys(seens[field]).sort(function (a, b) { return a.localeCompare(b, "ru", { numeric: true }); })
+      .forEach(function (v) {
+        var o = el("option", "", v); o.value = v; sel.appendChild(o);
+      });
+  }
+
+  /* ---------- Отрисовка таблицы ---------- */
+  function columns() {
+    var cols = [
+      { key: "full_name", label: "Студент", cls: "sticky" },
+      { key: "type_learn", label: "Форма обучения" },
+      { key: "subject", label: "Предмет" },
+      { key: "group_id", label: "Группа" },
+      { key: "profile", label: "Профиль" },
+      { key: "step", label: "Stepik" },
+      { key: "star", label: "Оценка" }
+    ];
+    tasks.forEach(function (t) {
+      cols.push({ key: "t:" + t.id, label: t.title, cls: "num" + (t.id === state.task ? " cur" : ""), tid: t.id });
+    });
+    cols.push({ key: "sum", label: "Сумма", cls: "num" });
+    if (state.task !== null) {
+      cols.push({ input: true, label: "Балл: " + taskById[state.task].title + " (до " + taskById[state.task].max_score + ")", cls: "input-col" });
+    }
+    return cols;
+  }
+
+  function renderHead() {
+    var tr = el("tr");
+    columns().forEach(function (c) {
+      var th = el("th", c.cls || "");
+      th.scope = "col";
+      if (c.input) {
+        th.textContent = c.label;
+      } else {
+        var b = el("button", "sort-btn", c.label);
+        b.type = "button";
+        b.addEventListener("click", function () {
+          if (state.key === c.key) state.dir = -state.dir; else { state.key = c.key; state.dir = 1; }
+          render();
+        });
+        th.appendChild(b);
+        if (state.key === c.key) th.setAttribute("aria-sort", state.dir === 1 ? "ascending" : "descending");
+      }
+      tr.appendChild(th);
+    });
+    var thead = $("#pivot thead");
+    thead.innerHTML = "";
+    thead.appendChild(tr);
+  }
+
+  function rowHasEdits(s) {
+    return Object.keys(edits).some(function (k) { return k.indexOf(s.id + ":") === 0; });
+  }
+
+  function renderBody() {
+    var rows = visible();
+    var tbody = $("#pivot tbody");
+    tbody.innerHTML = "";
+
+    rows.forEach(function (s) {
+      var tr = el("tr");
+      if (rowHasEdits(s)) tr.classList.add("dirty");
+
+      tr.appendChild(el("td", "sticky", s.full_name));
+      tr.appendChild(el("td", "", s.type_learn));
+      tr.appendChild(el("td", "", s.subject));
+      tr.appendChild(el("td", "", s.group_id));
+      tr.appendChild(el("td", "", s.profile));
+      tr.appendChild(el("td", "", s.step));
+      tr.appendChild(el("td", "", s.star));
+
+      tasks.forEach(function (t) {
+        var v = orig(s, t.id);
+        var td = el("td", "num" + (t.id === state.task ? " cur" : ""), v === null ? "–" : v);
+        if (v === null) td.classList.add("muted");
+        tr.appendChild(td);
+      });
+      tr.appendChild(el("td", "num total", total(s)));
+
+      if (state.task !== null) {
+        var tid = state.task;
+        var td = el("td", "input-col");
+        var inp = el("input", "score-input");
+        inp.type = "text";
+        inp.inputMode = "numeric";
+        inp.maxLength = 4;
+        inp.autocomplete = "off";
+        inp.setAttribute("aria-label", "Балл: " + s.full_name);
+        var k = keyOf(s.id, tid);
+        inp.value = (k in edits) ? edits[k] : origStr(s, tid);
+        if (!parseRaw(inp.value, tid).ok) inp.setAttribute("aria-invalid", "true");
+
+        inp.addEventListener("input", function () {
+          if (inp.value.trim() === origStr(s, tid)) delete edits[k]; else edits[k] = inp.value;
+          inp.setAttribute("aria-invalid", parseRaw(inp.value, tid).ok ? "false" : "true");
+          tr.classList.toggle("dirty", rowHasEdits(s));
+          updateBar();
+        });
+        inp.addEventListener("keydown", function (e) {
+          if (e.key !== "Enter") return;
+          e.preventDefault();
+          var all = Array.prototype.slice.call(document.querySelectorAll(".score-input"));
+          var next = all[all.indexOf(inp) + (e.shiftKey ? -1 : 1)];
+          if (next) { next.focus(); next.select(); }
+        });
+        inp.addEventListener("focus", function () { inp.select(); });
+
+        td.appendChild(inp);
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    });
+
+    $("#empty").hidden = rows.length > 0;
+    $("#summary").textContent = "Показано студентов: " + rows.length + " из " + students.length +
+      ". Задач: " + tasks.length + ".";
+  }
+
+  function render() { renderHead(); renderBody(); updateBar(); }
+
+  /* ---------- Панель сохранения ---------- */
+  function updateBar() {
+    var keys = Object.keys(edits);
+    var bad = keys.filter(function (k) { return !parseRaw(edits[k], k.split(":")[1]).ok; }).length;
+    var info = $("#dirtyInfo");
+    info.className = "dirty-info";
+    if (!keys.length) {
+      info.textContent = "Нет изменений";
+    } else if (bad) {
+      info.textContent = "Исправьте значения: " + bad + " (нужно целое число от 0 до максимума)";
+      info.classList.add("bad");
+    } else {
+      info.textContent = "Изменено оценок: " + keys.length;
+      info.classList.add("has");
+    }
+    $("#save").disabled = !keys.length || bad > 0;
+  }
+
+  var toastTimer;
+  function toast(msg, ok) {
+    var t = $("#toast");
+    t.textContent = msg;
+    t.className = "toast show " + (ok ? "ok" : "err");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.className = "toast"; }, 3500);
+  }
+
+  function errorText(body, status) {
+    if (body && typeof body.detail === "string") return body.detail;
+    if (body && Array.isArray(body.detail) && body.detail.length) {
+      return body.detail.map(function (d) { return d.msg; }).join("; ");
+    }
+    return "Не удалось сохранить (код " + status + ")";
+  }
+
+  function save() {
+    var items = Object.keys(edits).map(function (k) {
+      var p = k.split(":");
+      return { student_id: parseInt(p[0], 10), task_id: parseInt(p[1], 10), score: parseRaw(edits[k], p[1]).value };
+    });
+    var btn = $("#save");
+    btn.disabled = true;
+    btn.textContent = "Сохраняю…";
+
+    fetch("/api/scores", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: items })
+    }).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (body) {
+        if (!res.ok) throw new Error(errorText(body, res.status));
+        items.forEach(function (it) {
+          var s = students.filter(function (x) { return x.id === it.student_id; })[0];
+          if (it.score === null) delete s.bonus[it.task_id]; else s.bonus[it.task_id] = it.score;
+        });
+        edits = {};
+        render();
+        toast("Сохранено оценок: " + items.length, true);
+      });
+    }).catch(function (err) {
+      toast(err.message || "Ошибка сети", false);
+    }).then(function () {
+      btn.textContent = "Сохранить";
+      updateBar();
+    });
+  }
+
+
+  function get_student() {
+    // Получать список студентов
+    fetch("/api/students", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(state)
+    }).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (body) {
+        if (!res.ok) throw new Error(errorText(body, res.status));
+        students = body;
+        for (const elem in students) {
+          students[elem]['type_learn'] = students[elem]['form_study'] ? 'online' : 'offline';
+          students[elem]['sum'] = students[elem]['rate'];
+        }
+        console.log(students);
+        render();
+      })
+      }).catch(function (err) {
+      toast(err.message || "Ошибка сети", false);
+      console.log(err);
+    });
+  }
+
+  /* ---------- Подключение ---------- */
+  function renderSelect() {
+    fillSelect($("#fGroup"), "group_id");
+    fillSelect($("#fType"), "type_learn");
+    fillSelect($("#fProfile"), "profile");
+    fillSelect($("#fSubject"), "subject");
+  }
+
+  renderSelect()
+
+  var taskSel = $("#fTask");
+  if (!tasks.length) {
+    taskSel.appendChild(el("option", "", "Задач пока нет"));
+    taskSel.disabled = true;
+  }
+  tasks.forEach(function (t) {
+    var o = el("option", "", t.title + " (макс. " + t.max_score + ")");
+    o.value = t.id;
+    taskSel.appendChild(o);
+  });
+
+  $("#fSearch").addEventListener("input", function (e) { state.q = e.target.value.trim(); renderBody(); });
+  $("#fType").addEventListener("change", function (e) { 
+    state.type_learn = e.target.value; renderBody(); 
+    fillSelect($("#fGroup"), "group_id");
+    fillSelect($("#fProfile"), "profile");
+    fillSelect($("#fSubject"), "subject");
+  });
+  $("#fSubject").addEventListener("change", function (e) { state.subject = e.target.value; get_profile(); renderBody(); });
+  $("#fProfile").addEventListener("change", function (e) { state.profile = e.target.value; get_group(); renderBody(); });
+  $("#fGroup").addEventListener("change", function (e) { state.group = e.target.value; renderBody(); });
+  taskSel.addEventListener("change", function (e) { state.task = parseInt(e.target.value, 10); render(); });
+  $("#reset").addEventListener("click", function () {
+    state.group = ""; state.profile = ""; state.q = "";
+    $("#fGroup").value = ""; $("#fProfile").value = ""; $("#fSearch").value = "";
+    renderBody();
+  });
+  $("#get").addEventListener("click", get_student);
+  $("#save").addEventListener("click", save);
+
+  window.addEventListener("beforeunload", function (e) {
+    if (Object.keys(edits).length) { e.preventDefault(); e.returnValue = ""; }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
