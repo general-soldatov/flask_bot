@@ -13,8 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field
-
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, quote
 
 # Загрузка переменных окружения
 env_path = Path(__file__).parent / '.env'
@@ -69,6 +68,19 @@ def require_api_user(request: Request) -> str:
     user = current_user(request)
     if not user:
         raise HTTPException(401, "Нужно войти в систему")
+    return user
+
+class NotAuthenticated(Exception):
+    """Нет действующей сессии при открытии страницы."""
+
+@app.exception_handler(NotAuthenticated)
+async def redirect_to_login(request: Request, exc: NotAuthenticated):
+    return RedirectResponse(f"/login?next={quote(request.url.path)}", status_code=303)
+
+def require_page_user(request: Request) -> str:
+    user = current_user(request)
+    if not user:
+        raise NotAuthenticated()
     return user
  
  
@@ -126,6 +138,22 @@ async def load_payload() -> dict:
     tasks = [{'id': 0, 'title': 'Пропуск лекций', 'max_score': 15}, {'id': 1, 'title': 'Штрафы', 'max_score': 20}, {'id': 2, 'title': 'Бонусы', 'max_score': 30}]
     return {"students": students, "tasks": tasks, 
             "scores": scores.model_dump()}
+
+def load_stats() -> dict:
+    """Короткая сводка для главной страницы админки."""
+    # with db() as conn:
+    #     students = conn.execute("SELECT COUNT(*) FROM students").fetchone()[0]
+    #     groups = conn.execute("SELECT COUNT(DISTINCT study_group) FROM students").fetchone()[0]
+    #     tasks = conn.execute("SELECT COUNT(*) FROM tasks").fetchone()[0]
+    #     scores = conn.execute("SELECT COUNT(*) FROM scores").fetchone()[0]
+    # cells = students * tasks
+    return {
+        "students": [],
+        "groups": [],
+        "tasks": [],
+        "scores": [],
+        "filled_pct": 0 #round(scores * 100 / cells) if cells else 0,
+    }
 
 def get_student() -> dict:
     pass
@@ -250,11 +278,28 @@ def logout():
     response.delete_cookie(COOKIE_NAME, path="/")
     return response
 
-@app.get("/admin", response_class=HTMLResponse)
-async def admin_page(request: Request):
-    if not current_user(request):
-        return RedirectResponse("/login?next=/admin", status_code=303)
+@app.get("/admin", response_class=HTMLResponse, dependencies=[Depends(require_page_user)])
+def admin_home(request: Request):
+    return templates.TemplateResponse(request, "home.html", {"stats": load_stats()})
+
+@app.get("/admin/scores", response_class=HTMLResponse, dependencies=[Depends(require_page_user)])
+async def admin_scores(request: Request):
     return templates.TemplateResponse(request, "admin.html", {"payload": await load_payload()})
+
+def render_stub(request: Request, title: str, text: str) -> HTMLResponse:
+    return templates.TemplateResponse(request, "stub.html", {"title": title, "text": text})
+
+@app.get("/admin/dashboard", response_class=HTMLResponse, dependencies=[Depends(require_page_user)])
+def admin_dashboard(request: Request):
+    # Заглушка: страница дашборда ещё не сделана
+    return render_stub(request, "Дашборд", "Здесь появится сводная аналитика по студентам и группам.")
+ 
+ 
+@app.get("/admin/schedule", response_class=HTMLResponse, dependencies=[Depends(require_page_user)])
+def admin_schedule(request: Request):
+    # Заглушка: страница редактирования расписания ещё не сделана
+    return render_stub(request, "Обновление расписания", "Здесь появится редактор расписания занятий.")
+
 
 class ScoreIn(BaseModel):
     student_id: int

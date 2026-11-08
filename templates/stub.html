@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0f0b1c">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/static/style_tel.css">
+  <link rel="stylesheet" href="/static/style_admin.css">
+</head>
+<body>
+<main class="admin hub">
+  <header class="admin-head">
+    <div>
+      <a class="back" href="/admin">← В админку</a>
+      <h1>{{ title }}</h1>
+    </div>
+    <form method="post" action="/logout">
+      <button class="btn" type="submit">Выйти</button>
+    </form>
+  </header>
+
+  <section class="stub-card">
+    <h2>Раздел в разработке</h2>
+    <p>{{ text }}</p>
+    <a class="btn btn--primary" href="/admin">Вернуться на главную</a>
+  </section>
+</main>
+</body>
+</html>

@@ -249,3 +249,208 @@ th[aria-sort] .sort-btn { color: var(--accent-soft); }
   .pivot th, .pivot td { padding: 9px 10px; }
   .score-input { width: 4.5rem; }
 }
+
+/* ---------- Шапка админки с кнопкой выхода ---------- */
+
+.admin-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-head form { margin: 0; }
+
+/* ---------- Страница входа ---------- */
+
+.field > label {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.login-wrap {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+}
+
+.login-card {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  max-width: 400px;
+  padding: 28px 24px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+}
+
+.login-card h1 {
+  font-size: 1.625rem;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.login-sub { margin-top: -8px; color: var(--muted); }
+
+.form-error {
+  padding: 10px 14px;
+  border: 1px solid var(--danger);
+  border-radius: 12px;
+  background: rgba(255, 107, 129, 0.1);
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.pw { position: relative; }
+.pw input { padding-right: 96px; }
+
+.pw-toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--accent-soft);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pw-toggle:hover { background: var(--surface-2); }
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.btn--block { width: 100%; padding: 13px 18px; }
+
+/* ---------- Главная страница админки ---------- */
+
+.back {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: var(--accent-soft);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back:hover { text-decoration: underline; }
+
+.hub { max-width: 960px; padding-bottom: 32px; }
+
+.hub-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.hub-card {
+  --mx: 50%;
+  --my: 0%;
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 220px;
+  padding: 24px 22px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background:
+    radial-gradient(260px circle at var(--mx) var(--my), rgba(145, 5, 245, 0.22), transparent 70%),
+    linear-gradient(180deg, var(--surface-2), var(--surface));
+  color: var(--text);
+  text-decoration: none;
+  overflow: hidden;
+  opacity: 0;
+  animation: hub-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s;
+}
+
+.hub-card:nth-child(2) { animation-delay: 0.08s; }
+.hub-card:nth-child(3) { animation-delay: 0.16s; }
+
+@keyframes hub-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.hub-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+.hub-card:active { transform: translateY(-1px); }
+.hub-card--main { border-color: var(--accent); }
+
+.hub-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--accent-soft);
+}
+
+.hub-icon svg { width: 26px; height: 26px; }
+
+.hub-card h2 {
+  margin-top: 6px;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.hub-card p { color: var(--muted); }
+
+.hub-go {
+  align-self: end;
+  margin-top: 6px;
+  color: var(--accent-soft);
+  font-weight: 600;
+}
+
+.hub-go::after {
+  content: "→";
+  display: inline-block;
+  margin-left: 8px;
+  transition: transform 0.25s;
+}
+
+.hub-card:hover .hub-go::after { transform: translateX(6px); }
+
+.stub-card {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 28px 24px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+}
+
+.stub-card h2 { font-size: 1.25rem; font-weight: 700; }
+.stub-card p { color: var(--muted); }
+.stub-card .btn { margin-top: 6px; text-decoration: none; }

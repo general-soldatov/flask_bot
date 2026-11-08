@@ -11,9 +11,15 @@
 </head>
 <body>
 <main class="admin">
-  <header class="admin-head">
-    <h1>Оценки студентов</h1>
-    <p id="summary"></p>
+   <header class="admin-head">
+     <div>
+      <a class="back" href="/admin">← В админку</a>
+      <h1>Оценки студентов</h1>
+      <p id="summary"></p>
+    </div>
+    <form method="post" action="/logout">
+      <button class="btn" type="submit">Выйти</button>
+    </form>
   </header>
 
   <section class="toolbar" aria-label="Фильтры">
